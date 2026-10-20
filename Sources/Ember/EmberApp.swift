@@ -28,6 +28,11 @@ struct EmberApp: App {
         }
         .defaultSize(width: 760, height: 480)
 
+        Window("Stats", id: "stats") {
+            StatsView().environment(model)
+        }
+        .defaultSize(width: 640, height: 470)
+
         Window("Focus", id: "focus") {
             FocusView().environment(model)
         }

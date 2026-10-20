@@ -18,10 +18,10 @@ Menu-bar first, drag-to-set time, text shorthand (`25m`, `5m/1m`, `#focus`), sce
 | M3 | App shell: MenuBarExtra + window, bundle/run scripts, runs as .app | done |
 | M4 | Menu-bar popover UI + drag-to-set interaction | done |
 | M5 | Main window timer face + motion (springs, state transitions) | done |
-| M6 | Break/long-break cycle, notifications, sounds, menu-bar countdown | mostly done (cycle, sound, notifications); verify alerts in real run |
-| M7 | Fullscreen focus mode, scenario editor, persistence | todo |
-| M8 | Stats/history, settings, launch at login, Dock progress | todo |
-| M9 | Polish: icon, a11y, reduced motion, RUN.md, final verification | todo |
+| M6 | Break/long-break cycle, notifications, sounds, menu-bar countdown | done (alerts/delivery not verified on a live screen) |
+| M7 | Fullscreen focus mode, scenario editor, persistence | done |
+| M8 | Stats/history, settings, launch at login, Dock progress | done |
+| M9 | Polish: icon, a11y, reduced motion, RUN.md, final verification | done |
 
 ## Definition of done
 `scripts/run.sh` builds and launches Ember.app; a full 25/5 cycle works; UI matches chosen design; RUN.md accurate; `swift test` green.

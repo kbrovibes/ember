@@ -14,7 +14,8 @@ Plan: PLAN.md. Design: design/mocks.html (+ DESIGN.md once a direction is picked
 - Auto-resume cron (every ~30 min, session-only, 7-day expiry) re-enters from this file.
 
 ## Next action
-M7: fullscreen focus mode (controls fade to 0.22 after 2s idle), scenario/preset editor + persisted custom presets. Then M8 (stats view, Dock progress, launch at login), M9 (app icon, a11y/reduced-motion check, RUN.md, final verification). Commit after each.
+None required: M0-M9 complete, RUN.md written. Optional follow-ups if the user reports issues: live-screen check of drag feel, notifications, launch-at-login, Dock progress; reduced-motion for the tape spring; global hotkey; Shortcuts integration (Red Hot Timer parity).
 
 ## Log
 - 2026-10-20: plan, core, mocks opened in browser, UI built, snapshots verified.
+- 2026-10-20: M7 focus mode + scenario editor, M8 stats/dock/login item, M9 icon + RUN.md. Auto-resume cron deleted.

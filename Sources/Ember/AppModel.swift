@@ -15,6 +15,7 @@ final class AppModel {
     @ObservationIgnored private let store: HistoryStore
     @ObservationIgnored private let presetStore: PresetStore
     @ObservationIgnored private var ticker: Timer?
+    @ObservationIgnored private let dock = DockProgress()
 
     var presets: [Preset] { Preset.builtIn + customPresets }
 
@@ -113,6 +114,7 @@ final class AppModel {
         now = Date()
         let text = TimeFormat.clock(engine.remaining(at: now))
         if text != clockText { clockText = text }
+        dock.update(progress: engine.isIdle ? nil : engine.progress(at: now), phase: engine.phase)
     }
 
     private func handle(_ event: EngineEvent) {

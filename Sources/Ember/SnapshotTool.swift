@@ -39,6 +39,7 @@ enum SnapshotTool {
         shot("main-idle", size: window) { MainView() }
         shot("main-idle-dark", size: window, dark: true) { MainView() }
         shot("scenarios", size: CGSize(width: 760, height: 480)) { ScenarioEditorView() }
+        shot("stats", size: CGSize(width: 640, height: 470)) { StatsView() }
         shot("focus-idle", size: CGSize(width: 1280, height: 800)) { FocusView() }
 
         model.toggle()
