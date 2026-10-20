@@ -109,7 +109,7 @@ import Foundation
         e.start()
         now.addTimeInterval(1500)
         e.tick()
-        #expect(events == [.segmentEnded(.focus)])
+        #expect(events == [.segmentEnded(.focus, duration: 1500)])
         #expect(e.phase == .shortBreak)
         #expect(e.isRunning)
         #expect(e.completedFocusSessions == 1)

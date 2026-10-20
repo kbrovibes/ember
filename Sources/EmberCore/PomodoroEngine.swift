@@ -2,7 +2,8 @@ import Foundation
 import Observation
 
 public enum EngineEvent: Equatable, Sendable {
-    case segmentEnded(Phase)
+    /// Emitted after the engine has moved on, so `engine.phase` is already the next phase.
+    case segmentEnded(Phase, duration: TimeInterval)
     case cycleCompleted
 }
 
@@ -95,18 +96,17 @@ public final class PomodoroEngine {
     }
 
     private func advance(emitEvent: Bool) {
-        let ended = segment.phase
-        if ended == .focus { completedFocusSessions += 1 }
-        if emitEvent { onEvent?(.segmentEnded(ended)) }
+        let ended = segment
+        if ended.phase == .focus { completedFocusSessions += 1 }
 
-        if index + 1 < segments.count {
-            index += 1
-            status = .idle
-            if emitEvent && autoStartNext { start() }
-        } else {
-            index = 0
-            status = .idle
-            if emitEvent { onEvent?(.cycleCompleted) }
+        let wrapped = index + 1 >= segments.count
+        index = wrapped ? 0 : index + 1
+        status = .idle
+
+        if emitEvent {
+            if !wrapped && autoStartNext { start() }
+            onEvent?(.segmentEnded(ended.phase, duration: ended.duration))
+            if wrapped { onEvent?(.cycleCompleted) }
         }
     }
 }
