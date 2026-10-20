@@ -13,12 +13,12 @@ Menu-bar first, drag-to-set time, text shorthand (`25m`, `5m/1m`, `#focus`), sce
 | ID | Milestone | Status |
 |----|-----------|--------|
 | M0 | Repo, plan, resume protocol | done |
-| M1 | UX designer mocks (5 directions) opened in browser; pick one; write DESIGN.md | in progress |
-| M2 | EmberCore: engine state machine, presets, input parser + tests | in progress |
-| M3 | App shell: MenuBarExtra + window, bundle/run scripts, runs as .app | todo |
-| M4 | Menu-bar popover UI + drag-to-set interaction | todo |
-| M5 | Main window timer face + motion (springs, state transitions) | todo |
-| M6 | Break/long-break cycle, notifications, sounds, menu-bar countdown | todo |
+| M1 | UX designer mocks (5 directions) opened in browser; pick one; write DESIGN.md | done |
+| M2 | EmberCore: engine state machine, presets, input parser + tests | done |
+| M3 | App shell: MenuBarExtra + window, bundle/run scripts, runs as .app | done |
+| M4 | Menu-bar popover UI + drag-to-set interaction | done |
+| M5 | Main window timer face + motion (springs, state transitions) | done |
+| M6 | Break/long-break cycle, notifications, sounds, menu-bar countdown | mostly done (cycle, sound, notifications); verify alerts in real run |
 | M7 | Fullscreen focus mode, scenario editor, persistence | todo |
 | M8 | Stats/history, settings, launch at login, Dock progress | todo |
 | M9 | Polish: icon, a11y, reduced motion, RUN.md, final verification | todo |

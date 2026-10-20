@@ -4,16 +4,17 @@ Project: Ember (macOS Pomodoro timer). Dir: /Users/karthik/claude/ios/Ember
 Plan: PLAN.md. Design: design/mocks.html (+ DESIGN.md once a direction is picked).
 
 ## State
-- M0 done. M1 (mocks) delegated to a designer agent; M2 (core) in progress.
-- Xcode was still downloading at start (Xcode.appdownload); build with SwiftPM only.
+- Done: M0-M5 (plan, mocks -> chose Tape + rolling numerals, core engine, app shell, popover, main window, motion). M6 mostly done.
+- UI verification: `build/Ember.app/Contents/MacOS/Ember --snapshot <dir>` renders PNGs headlessly (ImageRenderer). screencapture returns black here (no permission). Menu/TextField show as yellow "prohibited" boxes in snapshots: render artifact only.
+- Drag/haptics/animation can't be exercised headlessly; be honest about that in RUN.md / final report.
 
 ## Environment gotchas
-- Xcode.app is installed but its license is NOT accepted (needs user's `sudo xcodebuild -license accept`). Until then prefix every shell command with `export DEVELOPER_DIR=/Library/Developer/CommandLineTools` (applies to git, swift, codesign shims too).
-- XCTest is unavailable under CLT; tests use Swift Testing (`import Testing`). `scripts/test.sh` (retries a flaky TestingMacros plugin load) works.
-- An auto-resume cron (every ~30 min, session-only, 7-day expiry) re-enters the work from this file.
+- Xcode.app installed but license NOT accepted (needs user's `sudo xcodebuild -license accept`). scripts/env.sh handles it: falls back to CLT and borrows Xcode's macro plugins via -plugin-path (CLT lacks SwiftUIMacros/TestingMacros). ALWAYS `source scripts/env.sh` (or use scripts/*.sh) before swift/git; for git alone, `export DEVELOPER_DIR=/Library/Developer/CommandLineTools`.
+- XCTest unavailable under CLT; tests use Swift Testing. Run `scripts/test.sh`.
+- Auto-resume cron (every ~30 min, session-only, 7-day expiry) re-enters from this file.
 
 ## Next action
-Finish M2 (swift test green), commit. Then check design/mocks.html exists, open it in the browser, pick a direction, write DESIGN.md, commit. Then M3.
+M7: fullscreen focus mode (controls fade to 0.22 after 2s idle), scenario/preset editor + persisted custom presets. Then M8 (stats view, Dock progress, launch at login), M9 (app icon, a11y/reduced-motion check, RUN.md, final verification). Commit after each.
 
 ## Log
-- 2026-10-20: project created, plan written.
+- 2026-10-20: plan, core, mocks opened in browser, UI built, snapshots verified.

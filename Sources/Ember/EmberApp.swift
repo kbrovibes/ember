@@ -3,7 +3,28 @@ import EmberCore
 
 @main
 struct EmberApp: App {
+    @State private var model = AppModel()
+
+    init() {
+        MainActor.assumeIsolated { SnapshotTool.runIfRequested() }
+    }
+
     var body: some Scene {
-        WindowGroup { Text("Ember").padding(40) }
+        MenuBarExtra {
+            PopoverView().environment(model)
+        } label: {
+            MenuBarLabel().environment(model)
+        }
+        .menuBarExtraStyle(.window)
+
+        Window("Ember", id: "main") {
+            MainView().environment(model)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 840, height: 540)
+
+        Settings {
+            SettingsView().environment(model)
+        }
     }
 }

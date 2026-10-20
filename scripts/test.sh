@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 source scripts/env.sh
 
 for attempt in 1 2 3; do
-  out="$(swift test 2>&1)"
+  out="$(swift test ${SWIFT_FLAGS[@]+"${SWIFT_FLAGS[@]}"} 2>&1)"
   if grep -q "plugin for module 'TestingMacros' not found" <<<"$out"; then
     echo "TestingMacros plugin flake (attempt $attempt), retrying..." >&2
     continue

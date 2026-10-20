@@ -5,7 +5,11 @@ cd "$(dirname "$0")/.."
 source scripts/env.sh
 
 CONFIG="${1:-release}"
-swift build -c "$CONFIG" 2>&1 | grep -v -E "ld: warning|arclite" || true
+if ! build_out="$(swift build -c "$CONFIG" ${SWIFT_FLAGS[@]+"${SWIFT_FLAGS[@]}"} 2>&1)"; then
+  grep -E "error" <<<"$build_out" | head -20 >&2
+  echo "build failed" >&2
+  exit 1
+fi
 BIN="$(swift build -c "$CONFIG" --show-bin-path 2>/dev/null)/Ember"
 [ -x "$BIN" ] || { echo "build failed: $BIN missing" >&2; exit 1; }
 
