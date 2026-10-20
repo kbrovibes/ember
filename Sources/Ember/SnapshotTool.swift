@@ -12,14 +12,12 @@ enum SnapshotTool {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("ember-snapshot-\(UUID().uuidString)")
-        let model = AppModel(prefs: Prefs(defaults: UserDefaults(suiteName: "ember.snapshot")!), store: HistoryStore(directory: scratch))
+        let model = AppModel(prefs: Prefs(defaults: UserDefaults(suiteName: "ember.snapshot")!), store: HistoryStore(directory: scratch), presetStore: PresetStore(directory: scratch))
         model.prefs.appearance = "light"
 
-        func shot(_ name: String, size: CGSize, dark: Bool = false) {
+        func shot<V: View>(_ name: String, size: CGSize, dark: Bool = false, @ViewBuilder _ content: () -> V) {
             model.prefs.appearance = dark ? "dark" : "light"
-            let view = Group {
-                if size.width < 400 { PopoverView() } else { MainView() }
-            }
+            let view = content()
             .environment(model)
             .environment(\.colorScheme, dark ? .dark : .light)
             .frame(width: size.width, height: size.height)
@@ -37,18 +35,21 @@ enum SnapshotTool {
         let window = CGSize(width: 840, height: 540)
 
         model.setMinutes(25)
-        shot("popover-idle", size: popover)
-        shot("main-idle", size: window)
-        shot("main-idle-dark", size: window, dark: true)
+        shot("popover-idle", size: popover) { PopoverView() }
+        shot("main-idle", size: window) { MainView() }
+        shot("main-idle-dark", size: window, dark: true) { MainView() }
+        shot("scenarios", size: CGSize(width: 760, height: 480)) { ScenarioEditorView() }
+        shot("focus-idle", size: CGSize(width: 1280, height: 800)) { FocusView() }
 
         model.toggle()
-        shot("popover-running", size: popover)
-        shot("main-running", size: window)
+        shot("popover-running", size: popover) { PopoverView() }
+        shot("main-running", size: window) { MainView() }
 
         model.toggle()
         model.skip()
-        shot("popover-break", size: popover)
-        shot("main-break", size: window)
+        shot("popover-break", size: popover) { PopoverView() }
+        shot("main-break", size: window) { MainView() }
+        shot("focus-break", size: CGSize(width: 1280, height: 800)) { FocusView() }
 
         exit(0)
     }

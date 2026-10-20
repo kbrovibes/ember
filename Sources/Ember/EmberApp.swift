@@ -23,6 +23,16 @@ struct EmberApp: App {
         .windowStyle(.hiddenTitleBar)
         .defaultSize(width: 840, height: 540)
 
+        Window("Scenarios", id: "scenarios") {
+            ScenarioEditorView().environment(model)
+        }
+        .defaultSize(width: 760, height: 480)
+
+        Window("Focus", id: "focus") {
+            FocusView().environment(model)
+        }
+        .windowStyle(.hiddenTitleBar)
+
         Settings {
             SettingsView().environment(model)
         }

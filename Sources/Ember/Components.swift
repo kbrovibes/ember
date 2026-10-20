@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import EmberCore
 
@@ -121,6 +122,7 @@ struct CycleStrip: View {
 
 struct PresetMenu: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         Menu {
@@ -131,6 +133,11 @@ struct PresetMenu: View {
                     let mark = preset.id == model.engine.preset.id ? "✓ " : ""
                     Text("\(mark)\(preset.name) · \(Int(preset.focus / 60))/\(Int(preset.shortBreak / 60))")
                 }
+            }
+            Divider()
+            Button("Edit scenarios…") {
+                openWindow(id: "scenarios")
+                NSApp.activate(ignoringOtherApps: true)
             }
         } label: {
             HStack(spacing: 4) {

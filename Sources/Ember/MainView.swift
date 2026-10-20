@@ -3,6 +3,7 @@ import EmberCore
 
 struct MainView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         let phase = model.engine.phase
@@ -14,6 +15,14 @@ struct MainView: View {
                 HStack {
                     PhaseChip()
                     Spacer()
+                    Button { openWindow(id: "focus") } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Theme.ink2)
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(PressStyle())
+                    .help("Focus mode")
                     PresetMenu()
                 }
 

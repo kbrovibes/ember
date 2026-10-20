@@ -8,21 +8,26 @@ final class AppModel {
     let engine: PomodoroEngine
     let prefs: Prefs
     private(set) var records: [SessionRecord]
+    private(set) var customPresets: [Preset]
     /// Refreshed ~10x/s while running; views read this instead of polling the clock.
     private(set) var now = Date()
     private(set) var clockText = "25:00"
     @ObservationIgnored private let store: HistoryStore
+    @ObservationIgnored private let presetStore: PresetStore
     @ObservationIgnored private var ticker: Timer?
 
-    var presets: [Preset] { Preset.builtIn }
+    var presets: [Preset] { Preset.builtIn + customPresets }
 
-    init(prefs: Prefs = Prefs(), store: HistoryStore = HistoryStore()) {
+    init(prefs: Prefs = Prefs(), store: HistoryStore = HistoryStore(), presetStore: PresetStore = PresetStore()) {
         self.prefs = prefs
         self.store = store
+        self.presetStore = presetStore
         records = store.load()
+        let custom = presetStore.load()
+        customPresets = custom
         prefs.applyAppearance()
 
-        let preset = Preset.builtIn.first { $0.id == prefs.presetID } ?? .classic
+        let preset = (Preset.builtIn + custom).first { $0.id == prefs.presetID } ?? .classic
         engine = PomodoroEngine(preset: preset)
         engine.autoStartNext = prefs.autoStartNext
         engine.onEvent = { [weak self] event in
@@ -72,6 +77,34 @@ final class AppModel {
         prefs.presetID = preset.id
         engine.select(preset)
         refresh()
+    }
+
+    // MARK: scenarios
+
+    func isBuiltIn(_ preset: Preset) -> Bool { Preset.builtIn.contains { $0.id == preset.id } }
+
+    @discardableResult
+    func addPreset(from template: Preset? = nil) -> Preset {
+        let base = template ?? .classic
+        var copy = base
+        copy.id = UUID().uuidString
+        copy.name = template == nil ? "Custom \(customPresets.count + 1)" : "\(base.name) copy"
+        customPresets.append(copy)
+        presetStore.save(customPresets)
+        return copy
+    }
+
+    func update(_ preset: Preset) {
+        guard let i = customPresets.firstIndex(where: { $0.id == preset.id }) else { return }
+        customPresets[i] = preset
+        presetStore.save(customPresets)
+        if engine.preset.id == preset.id && engine.isIdle { engine.select(preset); refresh() }
+    }
+
+    func deletePreset(_ id: String) {
+        customPresets.removeAll { $0.id == id }
+        presetStore.save(customPresets)
+        if engine.preset.id == id { select(.classic) }
     }
 
     // MARK: internals
