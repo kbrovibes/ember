@@ -9,7 +9,7 @@ Plan: PLAN.md. Design: design/mocks.html (+ DESIGN.md once a direction is picked
 
 ## Environment gotchas
 - Xcode.app is installed but its license is NOT accepted (needs user's `sudo xcodebuild -license accept`). Until then prefix every shell command with `export DEVELOPER_DIR=/Library/Developer/CommandLineTools` (applies to git, swift, codesign shims too).
-- XCTest is unavailable under CLT; tests use Swift Testing (`import Testing`). `swift test` works.
+- XCTest is unavailable under CLT; tests use Swift Testing (`import Testing`). `scripts/test.sh` (retries a flaky TestingMacros plugin load) works.
 - An auto-resume cron (every ~30 min, session-only, 7-day expiry) re-enters the work from this file.
 
 ## Next action
