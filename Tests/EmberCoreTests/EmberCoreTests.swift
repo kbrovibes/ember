@@ -28,6 +28,52 @@ import Foundation
     }
 }
 
+@Suite struct FormatTests {
+    @Test func clock() {
+        #expect(TimeFormat.clock(1500) == "25:00")
+        #expect(TimeFormat.clock(1499.2) == "25:00")
+        #expect(TimeFormat.clock(59) == "00:59")
+        #expect(TimeFormat.clock(3725) == "1:02:05")
+        #expect(TimeFormat.clock(-3) == "00:00")
+    }
+
+    @Test func spoken() {
+        #expect(TimeFormat.spoken(1500) == "25 min")
+        #expect(TimeFormat.spoken(5400) == "1 h 30 min")
+        #expect(TimeFormat.spoken(7200) == "2 h")
+        #expect(TimeFormat.spoken(45) == "45 s")
+    }
+}
+
+@Suite struct HistoryTests {
+    private let cal: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        return c
+    }()
+
+    private func at(_ daysAgo: Int, hour: Int = 10, from now: Date) -> Date {
+        cal.date(byAdding: .hour, value: hour, to: cal.date(byAdding: .day, value: -daysAgo, to: cal.startOfDay(for: now))!)!
+    }
+
+    @Test func summarizesTodayAndStreak() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let records = [0, 0, 1, 2, 4].map { SessionRecord(endedAt: at($0, from: now), duration: 1500) }
+        let s = History.summarize(records, now: now, calendar: cal)
+        #expect(s.todaySessions == 2)
+        #expect(s.todayFocus == 3000)
+        #expect(s.streakDays == 3)
+        #expect(s.last7Days.count == 7)
+        #expect(s.last7Days.last == 3000)
+    }
+
+    @Test func streakSurvivesUntilEndOfNextDay() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let records = [1, 2].map { SessionRecord(endedAt: at($0, from: now), duration: 1500) }
+        #expect(History.summarize(records, now: now, calendar: cal).streakDays == 2)
+    }
+}
+
 @Suite struct PresetTests {
     @Test func classicHasEightSegmentsEndingInLongBreak() {
         let s = Preset.classic.segments
