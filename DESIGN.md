@@ -1,15 +1,19 @@
-# Ember — design decision
+# Design
 
-Mocks: `design/mocks.html` (5 directions). Tokens: `design/tokens.json` (source of truth for values).
+Ember should feel calm, quick and a little playful. One idea drives it: a timer is a name and a time.
 
-**Chosen: Tape** (draggable tick ruler for setting/showing time) **+ Mono's rolling numerals** for the clock.
-Why: dragging a ruler is the most physical way to set time; each minute is a detent (haptic-capable); scales from 320pt popover to fullscreen. Trade-off: less glanceable than a ring, offset by big numerals and the cycle strip.
+## Principles
+- **One window, one idea.** No modes. A Pomodoro is just a `focus 20min` timer.
+- **Type, don't configure.** The text line is the main control. It reads sentences: `water 2m`, `20 min focus`.
+- **Never scroll, never blur.** Timer cards fill the window by resizing, not by scrolling. Every size is multiplied through layout (never a scaled bitmap) so text and strokes stay sharp at any size.
+- **Quiet by default, loud when it matters.** Controls are small and flat. A finished timer pulses and rings until acknowledged.
+- **Light by default**, with dark and system modes. One restrained accent (Ember, Plum, Moss or Graphite); glyph colours are close neighbours of the accent.
+- **Names are lowercase.**
 
-## Rules
-- Light by default (user preference); dark follows tokens; appearance selectable in Settings.
-- One accent per phase: focus ember `#CC4317`, short break teal `#2C7A8C`, long break indigo `#5A5FB8`. Never colour alone: label + SF Symbol + strip position (flame / cup / moon).
-- Time: monospaced digits, light weight, `.numericText` rolling transition.
-- Motion: `spring(response: 0.39, dampingFraction: 0.81)` for follow/press; 0.7s colour shift between phases; reduced-motion respected (no spring/rolling, 0.12s crossfade).
-- Tape: 10pt per minute, 1:1 while dragging, projected release (30% of predicted travel) then spring-snap to nearest minute; haptic `.alignment` every 5 minutes.
-- Ranges: focus 1–90, short 1–30, long 5–60.
-- Surfaces: popover 320pt wide; main window 840×540 (min 640×420); fullscreen focus mode with controls fading to 0.22 opacity.
+## Pieces
+- **Themes** (how time is drawn): Halo (ring dial), Mono (big numerals + hairline), Tide (draining pill), Cinder (liquid vessel), Tape (ruler under a needle). See `docs/design/mocks.html` for the original explorations.
+- **Glyphs** (optional personality): symbol picked from the name, monogram, identicon pattern, or a blinking buddy.
+- **Distraction-free mode**: only the timers; a faint exit button; finished timers keep their ✓ ↻.
+- **Motion**: `spring(response: 0.39, dampingFraction: 0.81)` for press and follow; a softer spring when cards reflow; Reduce Motion is respected.
+
+Design tokens from the first round live in `docs/design/tokens.json`.

@@ -96,10 +96,10 @@ final class AppModel {
     }
 
     /// Named timers are remembered, so the ones used most show up as quick-start chips next launch.
-    func addTimer(name: String, duration: TimeInterval) {
+    func addTimer(name: String, duration: TimeInterval, startedAt start: Date = Date()) {
         let trimmed = name.trimmingCharacters(in: .whitespaces).lowercased()
         var timer = QuickTimer(label: trimmed.isEmpty ? TimeFormat.spoken(duration) : trimmed, duration: duration)
-        timer.toggle(at: Date())
+        timer.toggle(at: start)
         timers.append(timer)
         if !trimmed.isEmpty { templates.record(name: trimmed, duration: duration, at: Date()) }
         commit()

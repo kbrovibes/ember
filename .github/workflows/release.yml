@@ -1,0 +1,28 @@
+name: Release
+
+# Releases are cut on purpose: `scripts/release.sh minor` bumps VERSION and tags, pushing the tag runs this.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches VERSION
+        run: '[ "v$(cat VERSION)" = "$GITHUB_REF_NAME" ] || { echo "VERSION ($(cat VERSION)) does not match $GITHUB_REF_NAME"; exit 1; }'
+      - name: Test
+        run: scripts/test.sh
+      - name: Build DMG (Apple silicon + Intel)
+        run: UNIVERSAL=1 scripts/dmg.sh
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            build/Ember.dmg "build/Ember-$(cat VERSION).dmg" build/Ember.dmg.sha256 \
+            --title "Ember $(cat VERSION)" --generate-notes

@@ -11,14 +11,19 @@ struct TimerEntry: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextField("", text: $text, prompt: Text("water 2m").foregroundStyle(Theme.ink3.opacity(0.6)))
-                .textFieldStyle(.plain)
-                .focused($focused)
-                .focusEffectDisabled()
-                .font(.system(size: fontSize, weight: .ultraLight))
-                .foregroundStyle(Theme.ink)
-                .onSubmit(add)
-                .onChange(of: text) { invalid = false }
+            if SnapshotTool.active {
+                Text("water 2m").font(.system(size: fontSize, weight: .ultraLight)).foregroundStyle(Theme.ink3.opacity(0.6))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                TextField("", text: $text, prompt: Text("water 2m").foregroundStyle(Theme.ink3.opacity(0.6)))
+                    .textFieldStyle(.plain)
+                    .focused($focused)
+                    .focusEffectDisabled()
+                    .font(.system(size: fontSize, weight: .ultraLight))
+                    .foregroundStyle(Theme.ink)
+                    .onSubmit(add)
+                    .onChange(of: text) { invalid = false }
+            }
 
             Rectangle()
                 .fill(invalid || focused ? Theme.accent : Theme.line2)

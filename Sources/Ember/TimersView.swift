@@ -161,11 +161,16 @@ struct TimerCard: View, Animatable {
                 } else {
                     glyph(k: k)
                 }
-                TextField("Name", text: Binding(get: { timer.label }, set: { model.renameTimer(timer.id, to: $0) }))
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13 * k, weight: .semibold))
-                    .foregroundStyle(Theme.ink2)
-                    .lineLimit(1)
+                if SnapshotTool.active {
+                    Text(timer.label).font(.system(size: 13 * k, weight: .semibold)).foregroundStyle(Theme.ink2).lineLimit(1)
+                    Spacer(minLength: 0)
+                } else {
+                    TextField("Name", text: Binding(get: { timer.label }, set: { model.renameTimer(timer.id, to: $0) }))
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13 * k, weight: .semibold))
+                        .foregroundStyle(Theme.ink2)
+                        .lineLimit(1)
+                }
                 if !timer.isDone {
                     Button { model.removeTimer(timer.id) } label: {
                         Image(systemName: "xmark").font(.system(size: 9 * k, weight: .bold)).foregroundStyle(Theme.ink3)

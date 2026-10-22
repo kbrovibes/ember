@@ -116,6 +116,7 @@ struct TimerFace: View {
                 if running { sparks(t: t, diameter: d) }
                 Circle().strokeBorder(Theme.line2, lineWidth: max(1, k))
                 TimeText(clock: clock, size: dialTextSize * k, weight: .light)
+                    .mask(Rectangle().fill(.black).overlay { wave.fill(.black).blendMode(.destinationOut) }.compositingGroup())
                 TimeText(clock: clock, size: dialTextSize * k, weight: .light, color: Theme.onAccent).mask(wave)
             }
             .frame(width: d - 6 * k, height: d - 6 * k)

@@ -1,5 +1,12 @@
 .build/
 build/
-*.xcodeproj/xcuserdata/
-.DS_Store
+*.dmg
 .swiftpm/
+.DS_Store
+*.xcodeproj/xcuserdata/
+
+# local agent tooling
+.claude/
+.claude-flow/
+.swarm/
+ruvector.db
