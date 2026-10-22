@@ -64,6 +64,15 @@ enum AccentTheme: String, CaseIterable, Identifiable {
         }
     }
 
+    var darkHex: String {
+        switch self {
+        case .ember: "FF8A5B"
+        case .plum: "D39BE4"
+        case .moss: "86CF99"
+        case .graphite: "D4D4D8"
+        }
+    }
+
     var accent: Color {
         switch self {
         case .ember: Color(light: "CC4317", dark: "FF8A5B")

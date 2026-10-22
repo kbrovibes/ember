@@ -14,7 +14,14 @@ struct TimersPane: View {
             VStack(alignment: .leading, spacing: 26) {
                 TimerEntry(fontSize: min(max(outer.size.width * 0.055, 44), 88))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                QuickStartRow(limit: 5)
+                HStack(alignment: .center, spacing: 24) {
+                    QuickStartRow(limit: min(5, max(2, Int((outer.size.width - 300) / 150))))
+                    Spacer(minLength: 0)
+                    if model.timers.count > 1 {
+                        SortBar().transition(.opacity)
+                    }
+                }
+                .animation(Theme.spring, value: model.timers.count > 1)
 
                 if model.timers.isEmpty {
                     VStack(spacing: 6) {
@@ -91,7 +98,7 @@ private struct TimerGrid: View {
 /// Sized by `scale` through layout (every metric is multiplied), not by scaling a rendered layer, so it stays sharp at
 /// any size. Conforming to `Animatable` makes SwiftUI re-run `body` for each interpolated scale, so reflows stay crisp too.
 struct TimerCard: View, Animatable {
-    static let size = CGSize(width: 224, height: 214)
+    static let size = CGSize(width: 216, height: 208)
     @Environment(AppModel.self) private var model
     let timer: QuickTimer
     var scale: CGFloat = 1
@@ -134,13 +141,13 @@ struct TimerCard: View, Animatable {
         let borderWidth: CGFloat = done ? max(2, 2 * k) : max(1, k)
         let glowColor: Color = done ? tint.opacity(0.10 + 0.30 * glow) : .clear
 
-        VStack(spacing: 12 * k) {
+        VStack(spacing: 8 * k) {
             if bare {
                 Spacer(minLength: 0)
                 HStack(spacing: 8 * k) {
                     glyph(k: k)
                     Text(timer.label)
-                        .font(.system(size: 12 * k, weight: .semibold))
+                        .font(.system(size: 14 * k, weight: .semibold))
                         .foregroundStyle(Theme.ink2)
                         .lineLimit(1)
                 }
@@ -156,7 +163,7 @@ struct TimerCard: View, Animatable {
                 }
                 TextField("Name", text: Binding(get: { timer.label }, set: { model.renameTimer(timer.id, to: $0) }))
                     .textFieldStyle(.plain)
-                    .font(.system(size: 12 * k, weight: .semibold))
+                    .font(.system(size: 13 * k, weight: .semibold))
                     .foregroundStyle(Theme.ink2)
                     .lineLimit(1)
                 if !timer.isDone {
@@ -186,10 +193,10 @@ struct TimerCard: View, Animatable {
             }
             }
         }
-        .padding(16 * k)
+                .padding(12 * k)
         .frame(width: Self.size.width * k, height: Self.size.height * k)
-        .background(RoundedRectangle(cornerRadius: 16 * k).fill(fill))
-        .overlay(RoundedRectangle(cornerRadius: 16 * k).strokeBorder(border, lineWidth: borderWidth))
+        .background(RoundedRectangle(cornerRadius: 14 * k).fill(fill))
+        .overlay(RoundedRectangle(cornerRadius: 14 * k).strokeBorder(border, lineWidth: borderWidth))
         .shadow(color: glowColor, radius: (4 + 14 * glow) * k)
         .animation(Theme.colorShift, value: timer.isRunning)
         .animation(Theme.colorShift, value: ringing)
@@ -198,7 +205,7 @@ struct TimerCard: View, Animatable {
     @ViewBuilder
     private func glyph(k: CGFloat) -> some View {
         if model.prefs.glyphStyle != .off {
-            TimerGlyph(style: model.prefs.glyphStyle, name: timer.label, size: 26 * k, running: timer.isRunning, done: timer.isDone)
+            TimerGlyph(style: model.prefs.glyphStyle, name: timer.label, size: 24 * k, running: timer.isRunning, done: timer.isDone)
         }
     }
 

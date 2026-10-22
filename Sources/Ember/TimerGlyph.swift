@@ -21,17 +21,33 @@ struct TimerGlyph: View {
         return h
     }
 
-    private static let palette: [Color] = ["E5603B", "D98A1D", "3E9B6B", "2C8FA6", "4F6FDB", "8B5CD6", "C94B9B", "6B7280"].map { Color(nsColor: NSColor(hex: $0)) }
-    private var color: Color { Self.palette[Int(seed % UInt64(Self.palette.count))] }
+    /// Eight neighbours of the app's accent (small hue, saturation and brightness shifts), so glyphs vary but stay in one family.
+    private static let tones: [(hue: CGFloat, sat: CGFloat, bri: CGFloat)] = [
+        (0, 1, 1), (-22, 0.9, 1.04), (22, 0.9, 1.04), (-11, 0.72, 1.12), (11, 0.78, 0.9), (0, 0.5, 1.06), (-34, 0.85, 0.95), (34, 0.85, 0.95),
+    ]
+
+    private var color: Color {
+        let theme = Prefs.current?.accent ?? .ember
+        let tone = Self.tones[Int(seed % UInt64(Self.tones.count))]
+        func shifted(_ hex: String) -> NSColor {
+            var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            (NSColor(hex: hex).usingColorSpace(.sRGB) ?? NSColor(hex: hex)).getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+            let hue = (h + tone.hue / 360 + 1).truncatingRemainder(dividingBy: 1)
+            return NSColor(hue: hue, saturation: min(1, s * tone.sat), brightness: min(1, b * tone.bri), alpha: 1)
+        }
+        let light = shifted(theme.lightHex), dark = shifted(theme.darkHex)
+        return Color(nsColor: NSColor(name: nil) { $0.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light })
+    }
 
     var body: some View {
+        let color = color
         Group {
             switch style {
             case .off: EmptyView()
-            case .symbol: symbol
-            case .monogram: monogram
-            case .pattern: pattern
-            case .buddy: buddy
+            case .symbol: symbol(color)
+            case .monogram: monogram(color)
+            case .pattern: pattern(color)
+            case .buddy: buddy(color)
             }
         }
         .frame(width: size, height: size)
@@ -64,7 +80,7 @@ struct TimerGlyph: View {
         return Self.fallbacks[Int(seed % UInt64(Self.fallbacks.count))]
     }
 
-    private var symbol: some View {
+    private func symbol(_ color: Color) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.3, style: .continuous).fill(color.opacity(0.16))
             Image(systemName: symbolName)
@@ -75,18 +91,18 @@ struct TimerGlyph: View {
 
     // MARK: Monogram
 
-    private var monogram: some View {
+    private func monogram(_ color: Color) -> some View {
         let letter = name.first(where: { $0.isLetter || $0.isNumber }).map { String($0).uppercased() } ?? "#"
         return ZStack {
             RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
                 .fill(LinearGradient(colors: [color, color.opacity(0.72)], startPoint: .topLeading, endPoint: .bottomTrailing))
-            Text(letter).font(.system(size: size * 0.54, weight: .bold, design: .rounded)).foregroundStyle(.white)
+            Text(letter).font(.system(size: size * 0.54, weight: .bold, design: .rounded)).foregroundStyle(Theme.onAccent)
         }
     }
 
     // MARK: Pattern — a small symmetric identicon
 
-    private var pattern: some View {
+    private func pattern(_ color: Color) -> some View {
         var bits = seed
         if bits.nonzeroBitCount < 12 { bits |= 0x2A5 }
         return ZStack {
@@ -108,7 +124,7 @@ struct TimerGlyph: View {
 
     // MARK: Buddy — a little face that blinks, and beams when its timer is done
 
-    private var buddy: some View {
+    private func buddy(_ color: Color) -> some View {
         TimelineView(.animation(minimumInterval: 1.0 / 20)) { tl in
             let t = tl.date.timeIntervalSinceReferenceDate
             let period = 3.0 + Double(seed % 7) * 0.2
@@ -127,7 +143,7 @@ struct TimerGlyph: View {
                 ctx.fill(shape, with: .color(color))
 
                 let eyeY = body.minY + w * 0.40
-                let ink = Color.white
+                let ink = Theme.onAccent
                 for dx in [-0.17, 0.17] {
                     let cx = body.midX + w * dx
                     let eye = CGRect(x: cx - w * 0.055, y: eyeY - (blink ? w * 0.012 : w * 0.07), width: w * 0.11, height: blink ? w * 0.024 : w * 0.14)
@@ -140,7 +156,7 @@ struct TimerGlyph: View {
                     mouth.closeSubpath()
                     ctx.fill(mouth, with: .color(ink))
                     for dx in [-0.27, 0.27] {
-                        ctx.fill(Path(ellipseIn: CGRect(x: body.midX + w * dx - w * 0.05, y: mouthY - w * 0.06, width: w * 0.1, height: w * 0.07)), with: .color(.white.opacity(0.35)))
+                        ctx.fill(Path(ellipseIn: CGRect(x: body.midX + w * dx - w * 0.05, y: mouthY - w * 0.06, width: w * 0.1, height: w * 0.07)), with: .color(Theme.onAccent.opacity(0.3)))
                     }
                 } else if running {
                     mouth.addArc(center: CGPoint(x: body.midX, y: mouthY - w * 0.03), radius: w * 0.1, startAngle: .degrees(20), endAngle: .degrees(160), clockwise: false)

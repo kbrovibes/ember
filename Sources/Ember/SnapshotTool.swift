@@ -49,6 +49,12 @@ enum SnapshotTool {
             shot("glyph-\(style.rawValue)", size: window) { MainView() }
         }
         shot("glyphpicker", size: CGSize(width: 440, height: 110)) { GlyphPicker().padding(20).background(Theme.bg) }
+        shot("glyphpicker-ember", size: CGSize(width: 440, height: 110)) { GlyphPicker().padding(20).background(Theme.bg) }
+        for accent in [AccentTheme.plum, .moss, .graphite] {
+            model.prefs.accent = accent
+            shot("glyphpicker-\(accent.rawValue)", size: CGSize(width: 440, height: 110)) { GlyphPicker().padding(20).background(Theme.bg) }
+        }
+        model.prefs.accent = .ember
         model.prefs.glyphStyle = .symbol
         shot("main-large", size: CGSize(width: 1600, height: 1000)) { MainView() }
         shot("popover-timers", size: popover) { PopoverView() }

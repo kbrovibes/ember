@@ -25,9 +25,6 @@ struct MainView: View {
 
     private var header: some View {
         HStack(spacing: 4) {
-            if model.timers.count > 1 {
-                SortBar().transition(.opacity)
-            }
             Spacer()
             iconButton("arrow.up.left.and.arrow.down.right", help: "Distraction-free") { model.enterZen() }
                 .disabled(model.timers.isEmpty)
@@ -41,7 +38,6 @@ struct MainView: View {
             .buttonStyle(PressStyle())
             .help("Settings (⌘,)")
         }
-        .animation(Theme.spring, value: model.timers.count > 1)
     }
 
     private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {

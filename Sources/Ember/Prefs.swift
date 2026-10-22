@@ -14,14 +14,6 @@ enum TimerSort: String, CaseIterable, Identifiable {
         case .total: "Length"
         }
     }
-    var symbol: String {
-        switch self {
-        case .added: "list.bullet"
-        case .name: "textformat.abc"
-        case .remaining: "hourglass"
-        case .total: "ruler"
-        }
-    }
 }
 
 @Observable
