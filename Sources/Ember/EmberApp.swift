@@ -10,18 +10,18 @@ struct EmberApp: App {
     }
 
     var body: some Scene {
+        Window("Ember", id: "main") {
+            MainView().environment(model)
+        }
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 840, height: 540)
+
         MenuBarExtra {
             PopoverView().environment(model)
         } label: {
             MenuBarLabel().environment(model)
         }
         .menuBarExtraStyle(.window)
-
-        Window("Ember", id: "main") {
-            MainView().environment(model)
-        }
-        .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 840, height: 540)
 
         Window("Scenarios", id: "scenarios") {
             ScenarioEditorView().environment(model)
