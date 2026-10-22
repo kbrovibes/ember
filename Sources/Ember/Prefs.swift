@@ -6,7 +6,22 @@ enum TimerSort: String, CaseIterable, Identifiable {
     case added, name, remaining, total
 
     var id: String { rawValue }
-    var title: String { rawValue.capitalized }
+    var title: String {
+        switch self {
+        case .added: "Order"
+        case .name: "A–Z"
+        case .remaining: "Time left"
+        case .total: "Length"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .added: "list.bullet"
+        case .name: "textformat.abc"
+        case .remaining: "hourglass"
+        case .total: "ruler"
+        }
+    }
 }
 
 @Observable
@@ -28,6 +43,7 @@ final class Prefs {
             "accent": "ember",
             "timerTheme": "tape",
             "autoZen": true,
+            "glyphStyle": "symbol",
             "sort": "added",
             "sortAscending": true,
             "timerSound": "Hero",
@@ -38,6 +54,7 @@ final class Prefs {
         menuBarShowsTime = defaults.bool(forKey: "menuBarShowsTime")
         appearance = defaults.string(forKey: "appearance") ?? "light"
         autoZen = defaults.bool(forKey: "autoZen")
+        glyphStyle = GlyphStyle(rawValue: defaults.string(forKey: "glyphStyle") ?? "") ?? .symbol
         sort = TimerSort(rawValue: defaults.string(forKey: "sort") ?? "") ?? .added
         sortAscending = defaults.bool(forKey: "sortAscending")
         timerTheme = TimerTheme(rawValue: defaults.string(forKey: "timerTheme") ?? "") ?? .tape
@@ -50,6 +67,7 @@ final class Prefs {
     var soundEnabled: Bool { didSet { defaults.set(soundEnabled, forKey: "soundEnabled") } }
     var notificationsEnabled: Bool { didSet { defaults.set(notificationsEnabled, forKey: "notificationsEnabled") } }
     var menuBarShowsTime: Bool { didSet { defaults.set(menuBarShowsTime, forKey: "menuBarShowsTime") } }
+    var glyphStyle: GlyphStyle { didSet { defaults.set(glyphStyle.rawValue, forKey: "glyphStyle") } }
     var autoZen: Bool { didSet { defaults.set(autoZen, forKey: "autoZen") } }
     var sort: TimerSort { didSet { defaults.set(sort.rawValue, forKey: "sort") } }
     var sortAscending: Bool { didSet { defaults.set(sortAscending, forKey: "sortAscending") } }

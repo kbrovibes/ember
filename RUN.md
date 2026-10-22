@@ -25,7 +25,8 @@ One window, one idea: timers. A Pomodoro is just a `focus 20min` timer.
 | Edit a card's name; pause/resume, reset, × | Manage each timer. Cards shrink to fit, never scroll |
 | ✓ or ↻ on a finished card | ✓ stops the alarm and closes the timer; ↻ restarts it. Finished timers ring every ~2s until you press one |
 | Expand button (top right), or idle for 10 minutes | Distraction-free mode: only the timers, filling the window. Faint exit button top right, or Esc. A finished timer keeps its ✓ / ↻ buttons. Turn the auto-switch off in Settings |
-| Name / Remaining / Total / Added tabs (top left, with 2+ timers) | Sort timers; click the active one again to reverse |
+| Order / A–Z / Time left / Length tabs (top left, with 2+ timers) | Sort timers; click the active one again to reverse |
+| Settings → Timer glyphs | Optional per-timer personality: Symbol, Monogram, Pattern or Buddy (a face that blinks and beams when done). Same name, same look. Off turns it off |
 | Chart button | Stats: finished timers today, streak, last 7 days |
 | ⌘, or gear button | Settings: timer theme (Halo, Mono, Tide, Cinder, Tape — switches live, no restart), mode (light default) + accent colour, alarm sound + volume, notifications, menu-bar countdown, launch at login, data folder |
 

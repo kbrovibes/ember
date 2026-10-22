@@ -44,6 +44,12 @@ enum SnapshotTool {
         model.enterZen()
         shot("zen", size: window) { MainView() }
         model.exitZen()
+        for style in GlyphStyle.allCases where style != .off {
+            model.prefs.glyphStyle = style
+            shot("glyph-\(style.rawValue)", size: window) { MainView() }
+        }
+        shot("glyphpicker", size: CGSize(width: 440, height: 110)) { GlyphPicker().padding(20).background(Theme.bg) }
+        model.prefs.glyphStyle = .symbol
         shot("main-large", size: CGSize(width: 1600, height: 1000)) { MainView() }
         shot("popover-timers", size: popover) { PopoverView() }
         shot("themepicker", size: CGSize(width: 440, height: 120)) { ThemePicker().padding(20).background(Theme.bg) }

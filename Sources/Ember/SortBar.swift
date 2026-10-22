@@ -6,12 +6,13 @@ struct SortBar: View {
     @Namespace private var underline
 
     var body: some View {
-        HStack(spacing: 22) {
+        HStack(spacing: 20) {
             ForEach(TimerSort.allCases) { sort in
                 let active = model.prefs.sort == sort
                 Button { withAnimation(Theme.layout) { model.chooseSort(sort) } } label: {
                     VStack(spacing: 6) {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 5) {
+                            Image(systemName: sort.symbol).font(.system(size: 11, weight: .semibold))
                             Text(sort.title)
                             if active && (sort != .added || !model.prefs.sortAscending) {
                                 Image(systemName: model.prefs.sortAscending ? "arrow.up" : "arrow.down")

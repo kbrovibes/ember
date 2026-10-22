@@ -14,6 +14,10 @@ struct SettingsView: View {
                 ThemePicker()
             }
 
+            Section("Timer glyphs") {
+                GlyphPicker()
+            }
+
             Section("Appearance") {
                 Picker("Mode", selection: $prefs.appearance) {
                     Text("Light").tag("light")
@@ -66,7 +70,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 480, height: 640)
+        .frame(width: 480, height: 740)
     }
 
     private func swatch(_ theme: AccentTheme, selected: Bool, action: @escaping () -> Void) -> some View {
@@ -124,6 +128,44 @@ struct ThemePicker: View {
                 }
                 .buttonStyle(PressStyle())
                 .accessibilityLabel("\(theme.name) theme")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// Previews each glyph style on three sample names; picking one applies to every timer immediately.
+struct GlyphPicker: View {
+    @Environment(AppModel.self) private var model
+    private let samples = ["Water", "Focus", "Tea"]
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(GlyphStyle.allCases) { style in
+                let selected = model.prefs.glyphStyle == style
+                Button { withAnimation(Theme.spring) { model.prefs.glyphStyle = style } } label: {
+                    VStack(spacing: 6) {
+                        Group {
+                            if style == .off {
+                                Text("None").font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.ink3)
+                            } else {
+                                HStack(spacing: 4) {
+                                    ForEach(samples, id: \.self) { TimerGlyph(style: style, name: $0, size: 18, running: style == .buddy) }
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 40)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.surface))
+                        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(selected ? Theme.accent : Theme.line, lineWidth: selected ? 2 : 1))
+                        Text(style.name)
+                            .font(.system(size: 11, weight: selected ? .semibold : .regular))
+                            .foregroundStyle(selected ? Theme.ink : Theme.ink3)
+                    }
+                }
+                .buttonStyle(PressStyle())
+                .accessibilityLabel("\(style.name) glyphs")
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }

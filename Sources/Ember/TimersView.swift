@@ -137,16 +137,23 @@ struct TimerCard: View, Animatable {
         VStack(spacing: 12 * k) {
             if bare {
                 Spacer(minLength: 0)
-                Text(timer.label)
-                    .font(.system(size: 12 * k, weight: .semibold))
-                    .foregroundStyle(Theme.ink2)
-                    .lineLimit(1)
+                HStack(spacing: 8 * k) {
+                    glyph(k: k)
+                    Text(timer.label)
+                        .font(.system(size: 12 * k, weight: .semibold))
+                        .foregroundStyle(Theme.ink2)
+                        .lineLimit(1)
+                }
             } else {
             HStack(spacing: 6 * k) {
-                Image(systemName: ringing ? "bell.fill" : "timer")
-                    .font(.system(size: 11 * k, weight: .semibold))
-                    .foregroundStyle(tint)
-                    .symbolEffect(.bounce, options: .repeating, isActive: ringing)
+                if model.prefs.glyphStyle == .off {
+                    Image(systemName: ringing ? "bell.fill" : "timer")
+                        .font(.system(size: 11 * k, weight: .semibold))
+                        .foregroundStyle(tint)
+                        .symbolEffect(.bounce, options: .repeating, isActive: ringing)
+                } else {
+                    glyph(k: k)
+                }
                 TextField("Name", text: Binding(get: { timer.label }, set: { model.renameTimer(timer.id, to: $0) }))
                     .textFieldStyle(.plain)
                     .font(.system(size: 12 * k, weight: .semibold))
@@ -186,6 +193,13 @@ struct TimerCard: View, Animatable {
         .shadow(color: glowColor, radius: (4 + 14 * glow) * k)
         .animation(Theme.colorShift, value: timer.isRunning)
         .animation(Theme.colorShift, value: ringing)
+    }
+
+    @ViewBuilder
+    private func glyph(k: CGFloat) -> some View {
+        if model.prefs.glyphStyle != .off {
+            TimerGlyph(style: model.prefs.glyphStyle, name: timer.label, size: 26 * k, running: timer.isRunning, done: timer.isDone)
+        }
     }
 
     private func round(_ k: CGFloat, _ symbol: String, tint: Color, filled: Bool, help: String, action: @escaping () -> Void) -> some View {

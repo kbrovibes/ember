@@ -60,6 +60,8 @@ private struct TimerRow: View {
         let tint = timer.isDone ? Theme.done : Theme.accent
         VStack(spacing: 6) {
             HStack(spacing: 10) {
+                TimerGlyph(style: model.prefs.glyphStyle, name: timer.label, size: 20, running: timer.isRunning, done: timer.isDone)
+                    .frame(width: model.prefs.glyphStyle == .off ? 0 : 20)
                 Text(timer.label).font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.ink).lineLimit(1)
                 Spacer()
                 Text(TimeFormat.clock(timer.remaining(at: model.now)))
