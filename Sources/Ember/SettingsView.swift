@@ -26,8 +26,7 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Timer") {
-                Toggle("Start next phase automatically", isOn: $prefs.autoStartNext)
+            Section("General") {
                 Toggle("Show countdown in menu bar", isOn: $prefs.menuBarShowsTime)
                 Toggle("Launch at login", isOn: Binding(get: { loginEnabled }, set: setLaunchAtLogin))
                 if let loginError {
@@ -36,11 +35,9 @@ struct SettingsView: View {
             }
 
             Section("Sound") {
-                Toggle("Play sounds", isOn: $prefs.soundEnabled)
+                Toggle("Play alarm", isOn: $prefs.soundEnabled)
                 Group {
-                    soundPicker("Focus ends", selection: $prefs.focusEndSound, volume: prefs.soundVolume)
-                    soundPicker("Break ends", selection: $prefs.breakEndSound, volume: prefs.soundVolume)
-                    soundPicker("Timer done", selection: $prefs.timerSound, volume: prefs.soundVolume)
+                    soundPicker("Alarm sound", selection: $prefs.timerSound, volume: prefs.soundVolume)
                     LabeledContent("Volume") {
                         Slider(value: $prefs.soundVolume, in: 0.1...1) { editing in
                             if !editing { Alerts.play(prefs.timerSound, volume: prefs.soundVolume) }
@@ -56,7 +53,7 @@ struct SettingsView: View {
             }
 
             Section("Data") {
-                LabeledContent("History, timers and scenarios") {
+                LabeledContent("History and timers") {
                     Button("Show in Finder") {
                         NSWorkspace.shared.activateFileViewerSelecting([model.dataFolder])
                     }
@@ -64,7 +61,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 620)
+        .frame(width: 460, height: 520)
     }
 
     private func swatch(_ theme: AccentTheme, selected: Bool, action: @escaping () -> Void) -> some View {

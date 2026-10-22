@@ -4,7 +4,6 @@ import EmberCore
 struct AppState: Codable {
     var timers: [QuickTimer] = []
     var templates = TimerTemplates()
-    var engine: PomodoroEngine.Snapshot?
 }
 
 struct StateStore {

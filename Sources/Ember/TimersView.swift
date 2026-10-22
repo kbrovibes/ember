@@ -1,54 +1,26 @@
 import SwiftUI
 import EmberCore
 
-/// Timers tab of the main window: one big text line, quick-start chips, and a grid that shrinks cards to fit, never scrolls.
+/// The whole app: one text line, quick-start chips, and a grid that shrinks cards to fit instead of scrolling.
 struct TimersPane: View {
     @Environment(AppModel.self) private var model
-    @State private var text = ""
-    @State private var invalid = false
-    @FocusState private var focused: Bool
 
     var body: some View {
         VStack(spacing: 26) {
-            entry
+            TimerEntry()
                 .frame(maxWidth: 560)
             QuickStartRow(limit: 5)
 
             if model.timers.isEmpty {
                 VStack(spacing: 6) {
                     Text("Nothing running").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.ink2)
-                    Text("Type a name and a time, like “water 2m”.").font(.system(size: 12)).foregroundStyle(Theme.ink3)
+                    Text("Type a name and a time, like “focus 20min”, or tap one above.").font(.system(size: 12)).foregroundStyle(Theme.ink3)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 TimerGrid(timers: model.timers)
             }
         }
-        .onAppear { focused = true }
-    }
-
-    private var entry: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            TextField("", text: $text, prompt: Text("water 2m").foregroundStyle(Theme.ink3.opacity(0.6)))
-                .textFieldStyle(.plain)
-                .focused($focused)
-                .focusEffectDisabled()
-                .font(.system(size: 34, weight: .ultraLight))
-                .foregroundStyle(Theme.ink)
-                .onSubmit(add)
-                .onChange(of: text) { invalid = false }
-
-            Rectangle()
-                .fill(invalid ? Theme.accent(.focus) : (focused ? Theme.accent(.focus) : Theme.line2))
-                .frame(height: focused || invalid ? 2 : 1)
-                .animation(Theme.spring, value: focused)
-        }
-    }
-
-    private func add() {
-        let trimmed = text.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
-        if model.addTimer(text: trimmed) { text = "" } else { invalid = true }
     }
 }
 
@@ -100,7 +72,7 @@ struct TimerCard: View {
     var body: some View {
         let remaining = timer.remaining(at: model.now)
         let clock = TimeFormat.clock(remaining)
-        let tint = timer.isDone ? Theme.accent(.shortBreak) : Theme.accent(.focus)
+        let tint = timer.isDone ? Theme.done : Theme.accent
         let ringing = model.ringing.contains(timer.id)
 
         VStack(alignment: .leading, spacing: 14) {

@@ -1,12 +1,10 @@
 import AppKit
-import EmberCore
 
 /// Draws the app icon with a progress bar along the bottom, so the Dock shows how far along the timer is.
 @MainActor
 final class DockProgress {
     private let tileView = DockTileView()
     private var lastBucket = -1
-    private var lastPhase: Phase?
 
     init() {
         let tile = NSApplication.shared.dockTile
@@ -16,20 +14,17 @@ final class DockProgress {
     }
 
     /// `progress` is nil when idle (no bar).
-    func update(progress: Double?, phase: Phase) {
+    func update(progress: Double?) {
         let bucket = progress.map { Int($0 * 200) } ?? -1
-        guard bucket != lastBucket || phase != lastPhase else { return }
+        guard bucket != lastBucket else { return }
         lastBucket = bucket
-        lastPhase = phase
         tileView.progress = progress
-        tileView.phase = phase
         NSApplication.shared.dockTile.display()
     }
 }
 
 private final class DockTileView: NSView {
     var progress: Double?
-    var phase: Phase = .focus
 
     override func draw(_ dirtyRect: NSRect) {
         NSApplication.shared.applicationIconImage?.draw(in: bounds)
@@ -42,11 +37,7 @@ private final class DockTileView: NSView {
 
         var fill = track
         fill.size.width = max(track.height, track.width * progress)
-        let hex = switch phase {
-        case .focus: Prefs.current?.accent.lightHex ?? "CC4317"
-        case .shortBreak: "2C7A8C"
-        case .longBreak: "5A5FB8"
-        }
+        let hex = Prefs.current?.accent.lightHex ?? "CC4317"
         NSColor(hex: hex).setFill()
         NSBezierPath(roundedRect: fill, xRadius: fill.height / 2, yRadius: fill.height / 2).fill()
     }

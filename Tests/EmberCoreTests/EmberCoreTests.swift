@@ -74,91 +74,6 @@ import Foundation
     }
 }
 
-@Suite struct PresetTests {
-    @Test func classicHasEightSegmentsEndingInLongBreak() {
-        let s = Preset.classic.segments
-        #expect(s.count == 8)
-        #expect(s.map(\.phase) == [.focus, .shortBreak, .focus, .shortBreak, .focus, .shortBreak, .focus, .longBreak])
-        #expect(s.last?.duration == TimeInterval(900))
-    }
-}
-
-@Suite final class EngineTests {
-    private var now = Date(timeIntervalSince1970: 1_000_000)
-
-    private func makeEngine() -> PomodoroEngine {
-        PomodoroEngine(preset: .classic, clock: { [unowned self] in self.now })
-    }
-
-    @Test func startPauseResumePreservesRemaining() {
-        let e = makeEngine()
-        e.start()
-        now.addTimeInterval(100)
-        e.pause()
-        #expect(abs(e.remaining(at: now) - 1400) < 0.001)
-        now.addTimeInterval(500)
-        e.start()
-        now.addTimeInterval(50)
-        #expect(abs(e.remaining(at: now) - 1350) < 0.001)
-    }
-
-    @Test func autoAdvanceToBreakAndEmitsEvent() {
-        let e = makeEngine()
-        var events: [EngineEvent] = []
-        e.onEvent = { events.append($0) }
-        e.start()
-        now.addTimeInterval(1500)
-        e.tick()
-        #expect(events == [.segmentEnded(.focus, duration: 1500)])
-        #expect(e.phase == .shortBreak)
-        #expect(e.isRunning)
-        #expect(e.completedFocusSessions == 1)
-    }
-
-    @Test func noAutoStartLeavesIdle() {
-        let e = makeEngine()
-        e.autoStartNext = false
-        e.start()
-        now.addTimeInterval(1500)
-        e.tick()
-        #expect(e.isIdle)
-        #expect(e.phase == .shortBreak)
-    }
-
-    @Test func fullCycleCompletes() {
-        let e = makeEngine()
-        var events: [EngineEvent] = []
-        e.onEvent = { events.append($0) }
-        e.start()
-        for segment in Preset.classic.segments {
-            now.addTimeInterval(segment.duration)
-            e.tick()
-        }
-        #expect(events.last == .cycleCompleted)
-        #expect(e.completedFocusSessions == 4)
-        #expect(e.index == 0)
-        #expect(e.isIdle)
-    }
-
-    @Test func setDurationOnlyWhenIdle() {
-        let e = makeEngine()
-        e.setDuration(600)
-        #expect(e.segment.duration == 600)
-        e.start()
-        e.setDuration(900)
-        #expect(e.segment.duration == 600)
-    }
-
-    @Test func skipMovesOnWithoutEvent() {
-        let e = makeEngine()
-        var events: [EngineEvent] = []
-        e.onEvent = { events.append($0) }
-        e.skip()
-        #expect(e.phase == .shortBreak)
-        #expect(events.isEmpty)
-    }
-}
-
 @Suite struct QuickTimerTests {
     let t0 = Date(timeIntervalSince1970: 1_000)
 
@@ -220,22 +135,6 @@ import Foundation
         var templates = TimerTemplates()
         templates.remove(id: TimerTemplates.seeds[0].id)
         #expect(templates.items.count == TimerTemplates.seeds.count - 1)
-    }
-
-    @Test func engineRestoresMidSegmentAndAdvancesWhenExpired() {
-        let a = PomodoroEngine(preset: .classic, clock: { Date(timeIntervalSince1970: 1_000) })
-        a.start()
-        let saved = a.snapshot()
-
-        let b = PomodoroEngine(preset: .classic, clock: { Date(timeIntervalSince1970: 1_100) })
-        b.restore(saved)
-        #expect(b.isRunning)
-        #expect(b.remaining(at: Date(timeIntervalSince1970: 1_100)) == 1_400)
-
-        let c = PomodoroEngine(preset: .classic, clock: { Date(timeIntervalSince1970: 9_000) })
-        c.restore(saved)
-        #expect(c.isIdle)
-        #expect(c.phase == .shortBreak)
     }
 }
 

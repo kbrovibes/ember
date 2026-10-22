@@ -12,54 +12,39 @@ enum SnapshotTool {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("ember-snapshot-\(UUID().uuidString)")
-        let model = AppModel(prefs: Prefs(defaults: UserDefaults(suiteName: "ember.snapshot")!), store: HistoryStore(directory: scratch), presetStore: PresetStore(directory: scratch), stateStore: StateStore(directory: scratch))
-        model.prefs.appearance = "light"
+        let model = AppModel(prefs: Prefs(defaults: UserDefaults(suiteName: "ember.snapshot")!), store: HistoryStore(directory: scratch), stateStore: StateStore(directory: scratch))
 
         func shot<V: View>(_ name: String, size: CGSize, dark: Bool = false, @ViewBuilder _ content: () -> V) {
             model.prefs.appearance = dark ? "dark" : "light"
             let view = content()
-            .environment(model)
-            .environment(\.colorScheme, dark ? .dark : .light)
-            .frame(width: size.width, height: size.height)
-            .fixedSize()
+                .environment(model)
+                .environment(\.colorScheme, dark ? .dark : .light)
+                .frame(width: size.width, height: size.height)
+                .fixedSize()
 
             let renderer = ImageRenderer(content: view)
             renderer.scale = 2
             guard let cg = renderer.cgImage else { print("snapshot failed: \(name)"); return }
-            let rep = NSBitmapImageRep(cgImage: cg)
-            try? rep.representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("\(name).png"))
+            try? NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])?.write(to: dir.appendingPathComponent("\(name).png"))
             print("wrote \(name).png")
         }
 
-        let popover = CGSize(width: 320, height: 430)
         let window = CGSize(width: 840, height: 540)
+        let popover = CGSize(width: 320, height: 430)
 
-        model.setMinutes(25)
-        shot("popover-idle", size: popover) { PopoverView() }
-        shot("main-idle", size: window) { MainView() }
-        shot("main-idle-dark", size: window, dark: true) { MainView() }
-        shot("scenarios", size: CGSize(width: 760, height: 480)) { ScenarioEditorView() }
+        shot("main-empty", size: window) { MainView() }
+        shot("popover-empty", size: popover) { PopoverView() }
+
+        for spec in ["focus 20min", "water 1h", "tea 5m", "eggs 90s"] { model.addTimer(text: spec) }
+        shot("main-timers", size: window) { MainView() }
+        shot("main-timers-dark", size: window, dark: true) { MainView() }
+        shot("popover-timers", size: popover) { PopoverView() }
+
+        for spec in ["lunch 12m", "stretch 3m", "email 15m", "call 45m", "read 30m", "walk 20m", "tidy 10m"] { model.addTimer(text: spec) }
+        shot("main-many", size: window) { MainView() }
+
         shot("stats", size: CGSize(width: 640, height: 470)) { StatsView() }
-        shot("focus-idle", size: CGSize(width: 1280, height: 800)) { FocusView() }
-
-        for spec in ["tea 5m", "write 25min", "eggs 90s"] { model.addTimer(text: spec) }
-        model.mainTab = .timers
-        shot("timers-tab", size: window) { MainView() }
-        for spec in ["lunch 12m", "stretch 3m", "email 15m", "call 45m", "read 30m", "walk 20m", "tidy 10m", "water 1h"] { model.addTimer(text: spec) }
-        shot("timers-tab-many", size: window) { MainView() }
-        model.mainTab = .pomodoro
-        shot("settings", size: CGSize(width: 460, height: 620)) { SettingsView() }
-
-        model.toggle()
-        shot("popover-running", size: popover) { PopoverView() }
-        shot("main-running", size: window) { MainView() }
-
-        model.toggle()
-        model.skip()
-        shot("popover-break", size: popover) { PopoverView() }
-        shot("main-break", size: window) { MainView() }
-        shot("focus-break", size: CGSize(width: 1280, height: 800)) { FocusView() }
-
+        shot("settings", size: CGSize(width: 460, height: 520)) { SettingsView() }
         exit(0)
     }
 }

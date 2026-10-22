@@ -1,6 +1,5 @@
 import AppKit
 import SwiftUI
-import EmberCore
 
 extension NSColor {
     convenience init(hex: String) {
@@ -33,24 +32,21 @@ enum Theme {
     static let spring = Animation.spring(response: 0.39, dampingFraction: 0.81)
     static let colorShift = Animation.easeInOut(duration: 0.7)
 
-    static func accent(_ phase: Phase) -> Color {
-        switch phase {
-        case .focus: (Prefs.current?.accent ?? .ember).accent
-        case .shortBreak: Color(light: "2C7A8C", dark: "6CC4D6")
-        case .longBreak: Color(light: "5A5FB8", dark: "9EA3F0")
-        }
-    }
+    static var accent: Color { (Prefs.current?.accent ?? .ember).accent }
+    static var soft: Color { (Prefs.current?.accent ?? .ember).soft }
+    /// Used for finished timers.
+    static let done = Color(light: "2C7A8C", dark: "6CC4D6")
+}
 
-    static func soft(_ phase: Phase) -> Color {
-        switch phase {
-        case .focus: (Prefs.current?.accent ?? .ember).soft
-        case .shortBreak: Color(light: "E4F1F4", dark: "10252A")
-        case .longBreak: Color(light: "ECEDF9", dark: "1A1B33")
-        }
+struct PressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .animation(Theme.spring, value: configuration.isPressed)
     }
 }
 
-/// Colour theme for the focus phase and timer cards. Break phases keep their own colours.
+/// Accent colour for buttons, timer cards and the text-line underline.
 enum AccentTheme: String, CaseIterable, Identifiable {
     case ember, plum, moss, graphite
 
@@ -81,33 +77,6 @@ enum AccentTheme: String, CaseIterable, Identifiable {
         case .plum: Color(light: "F4EAF7", dark: "261430")
         case .moss: Color(light: "E8F3EB", dark: "11261A")
         case .graphite: Color(light: "EFEFF1", dark: "222226")
-        }
-    }
-}
-
-extension Phase {
-    var label: String {
-        switch self {
-        case .focus: "Focus"
-        case .shortBreak: "Short break"
-        case .longBreak: "Long break"
-        }
-    }
-
-    var symbol: String {
-        switch self {
-        case .focus: "flame.fill"
-        case .shortBreak: "cup.and.saucer.fill"
-        case .longBreak: "moon.fill"
-        }
-    }
-
-    /// Allowed drag-to-set range, in minutes.
-    var minuteRange: ClosedRange<Double> {
-        switch self {
-        case .focus: 1...90
-        case .shortBreak: 1...30
-        case .longBreak: 5...60
         }
     }
 }

@@ -12,7 +12,6 @@ struct QuickStartRow: View {
             ForEach(model.templates.top(limit)) { template in
                 Button {
                     model.startTemplate(template)
-                    model.showTimers()
                     onStart?()
                 } label: {
                     HStack(spacing: 6) {

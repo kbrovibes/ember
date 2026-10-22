@@ -14,40 +14,28 @@ final class Prefs {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
-            "autoStartNext": true,
             "soundEnabled": true,
             "notificationsEnabled": true,
             "menuBarShowsTime": true,
-            "presetID": "classic",
             "appearance": "light",
             "accent": "ember",
-            "focusEndSound": "Glass",
-            "breakEndSound": "Pop",
             "timerSound": "Hero",
             "soundVolume": 0.8,
         ])
-        autoStartNext = defaults.bool(forKey: "autoStartNext")
         soundEnabled = defaults.bool(forKey: "soundEnabled")
         notificationsEnabled = defaults.bool(forKey: "notificationsEnabled")
         menuBarShowsTime = defaults.bool(forKey: "menuBarShowsTime")
-        presetID = defaults.string(forKey: "presetID") ?? "classic"
         appearance = defaults.string(forKey: "appearance") ?? "light"
         accent = AccentTheme(rawValue: defaults.string(forKey: "accent") ?? "") ?? .ember
-        focusEndSound = defaults.string(forKey: "focusEndSound") ?? "Glass"
-        breakEndSound = defaults.string(forKey: "breakEndSound") ?? "Pop"
         timerSound = defaults.string(forKey: "timerSound") ?? "Hero"
         soundVolume = defaults.double(forKey: "soundVolume")
         Prefs.current = self
     }
 
-    var autoStartNext: Bool { didSet { defaults.set(autoStartNext, forKey: "autoStartNext") } }
     var soundEnabled: Bool { didSet { defaults.set(soundEnabled, forKey: "soundEnabled") } }
     var notificationsEnabled: Bool { didSet { defaults.set(notificationsEnabled, forKey: "notificationsEnabled") } }
     var menuBarShowsTime: Bool { didSet { defaults.set(menuBarShowsTime, forKey: "menuBarShowsTime") } }
-    var presetID: String { didSet { defaults.set(presetID, forKey: "presetID") } }
     var accent: AccentTheme { didSet { defaults.set(accent.rawValue, forKey: "accent") } }
-    var focusEndSound: String { didSet { defaults.set(focusEndSound, forKey: "focusEndSound") } }
-    var breakEndSound: String { didSet { defaults.set(breakEndSound, forKey: "breakEndSound") } }
     var timerSound: String { didSet { defaults.set(timerSound, forKey: "timerSound") } }
     var soundVolume: Double { didSet { defaults.set(soundVolume, forKey: "soundVolume") } }
     /// "light" (default), "dark" or "system".

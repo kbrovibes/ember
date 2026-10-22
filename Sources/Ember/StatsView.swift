@@ -24,12 +24,13 @@ struct StatsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Recent").font(.system(size: 13, weight: .semibold))
                 if model.records.isEmpty {
-                    Text("Finish a focus session and it shows up here.").font(.system(size: 12)).foregroundStyle(Theme.ink3)
+                    Text("Finished timers show up here.").font(.system(size: 12)).foregroundStyle(Theme.ink3)
                 } else {
                     ForEach(model.records.suffix(5).reversed()) { r in
                         HStack {
-                            Image(systemName: Phase.focus.symbol).foregroundStyle(Theme.accent(.focus)).font(.system(size: 11))
-                            Text(r.endedAt.formatted(date: .abbreviated, time: .shortened)).font(.system(size: 12))
+                            Image(systemName: "timer").foregroundStyle(Theme.accent).font(.system(size: 11))
+                            Text(r.tag ?? "Timer").font(.system(size: 12, weight: .medium))
+                            Text(r.endedAt.formatted(date: .abbreviated, time: .shortened)).font(.system(size: 12)).foregroundStyle(Theme.ink3)
                             Spacer()
                             Text(TimeFormat.spoken(r.duration)).font(.system(size: 12, weight: .medium)).monospacedDigit().foregroundStyle(Theme.ink2)
                         }
@@ -64,7 +65,7 @@ struct StatsView: View {
                 VStack(spacing: 6) {
                     Text(seconds > 0 ? "\(Int(seconds / 60))" : " ").font(.system(size: 10)).monospacedDigit().foregroundStyle(Theme.ink3)
                     Capsule()
-                        .fill(i == 6 ? Theme.accent(.focus) : Theme.accent(.focus).opacity(0.35))
+                        .fill(i == 6 ? Theme.accent : Theme.accent.opacity(0.35))
                         .frame(height: max(4, 70 * seconds / peak))
                     Text(date.formatted(.dateTime.weekday(.narrow))).font(.system(size: 11, weight: i == 6 ? .semibold : .regular)).foregroundStyle(i == 6 ? Theme.ink : Theme.ink3)
                 }
