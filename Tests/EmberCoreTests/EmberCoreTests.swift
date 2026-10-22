@@ -158,3 +158,40 @@ import Foundation
         #expect(events.isEmpty)
     }
 }
+
+@Suite struct QuickTimerTests {
+    let t0 = Date(timeIntervalSince1970: 1_000)
+
+    @Test func countsDownPausesAndResumes() {
+        var timer = QuickTimer(label: "tea", duration: 300)
+        timer.toggle(at: t0)
+        #expect(timer.remaining(at: t0.addingTimeInterval(100)) == 200)
+        timer.toggle(at: t0.addingTimeInterval(100))
+        #expect(timer.remaining(at: t0.addingTimeInterval(500)) == 200)
+        timer.toggle(at: t0.addingTimeInterval(500))
+        #expect(timer.remaining(at: t0.addingTimeInterval(550)) == 150)
+    }
+
+    @Test func finishesOnceAndRestarts() {
+        var timer = QuickTimer(label: "eggs", duration: 60)
+        timer.toggle(at: t0)
+        let early = timer.tick(at: t0.addingTimeInterval(59))
+        let finishing = timer.tick(at: t0.addingTimeInterval(60))
+        let after = timer.tick(at: t0.addingTimeInterval(61))
+        #expect(!early)
+        #expect(finishing)
+        #expect(!after)
+        #expect(timer.isDone)
+        timer.toggle(at: t0.addingTimeInterval(70))
+        #expect(timer.isRunning)
+        #expect(timer.remaining(at: t0.addingTimeInterval(70)) == 60)
+    }
+
+    @Test func resetReturnsToIdle() {
+        var timer = QuickTimer(label: "x", duration: 60)
+        timer.toggle(at: t0)
+        timer.reset()
+        #expect(timer.state == .idle)
+        #expect(timer.progress(at: t0) == 0)
+    }
+}

@@ -23,6 +23,14 @@ struct MainView: View {
                     }
                     .buttonStyle(PressStyle())
                     .help("Focus mode")
+                    Button { openWindow(id: "timers") } label: {
+                        Image(systemName: "square.grid.2x2")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Theme.ink2)
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(PressStyle())
+                    .help("Timers")
                     Button { openWindow(id: "stats") } label: {
                         Image(systemName: "chart.bar")
                             .font(.system(size: 12, weight: .medium))

@@ -27,6 +27,15 @@ enum Alerts {
         UNUserNotificationCenter.current().add(request)
     }
 
+    static func timerDone(_ label: String, sound: Bool, notify: Bool) {
+        if sound { play("Glass") }
+        guard notify, canNotify else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "Timer done"
+        content.body = label
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+
     static func play(_ name: String) {
         NSSound(named: NSSound.Name(name))?.play()
     }

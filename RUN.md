@@ -24,6 +24,7 @@ Install permanently: `cp -R build/Ember.app /Applications/`
 | Skip / reset buttons | Move to next phase / restart this one |
 | Preset menu → Edit scenarios… | Pick or build your own focus/break cycle (saved) |
 | Expand button (main window) | Fullscreen focus mode; controls fade while running; `Esc` exits |
+| Grid button (main window) | Timers: any number of independent countdowns in a grid. Type `5m #tea` + Return to add; play/pause, reset, remove per card. Not saved across launches |
 | Chart button (main window) | Stats: today, streak, last 7 days |
 | ⌘, | Settings: appearance (light by default), auto-start, sound, notifications, launch at login |
 

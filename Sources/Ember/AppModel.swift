@@ -12,6 +12,7 @@ final class AppModel {
     /// Refreshed ~10x/s while running; views read this instead of polling the clock.
     private(set) var now = Date()
     private(set) var clockText = "25:00"
+    private(set) var timers: [QuickTimer] = []
     @ObservationIgnored private let store: HistoryStore
     @ObservationIgnored private let presetStore: PresetStore
     @ObservationIgnored private var ticker: Timer?
@@ -37,8 +38,11 @@ final class AppModel {
 
         let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self, self.engine.isRunning else { return }
-                self.engine.tick()
+                guard let self else { return }
+                let timersRunning = self.timers.contains { $0.isRunning }
+                guard self.engine.isRunning || timersRunning else { return }
+                if self.engine.isRunning { self.engine.tick() }
+                if timersRunning { self.tickTimers() }
                 self.refresh()
             }
         }
@@ -78,6 +82,36 @@ final class AppModel {
         prefs.presetID = preset.id
         engine.select(preset)
         refresh()
+    }
+
+    // MARK: quick timers
+
+    /// Accepts the same shorthand as the main field (`5m`, `1h30m`, `90s #tea`). Returns false if unparseable.
+    @discardableResult
+    func addTimer(text: String, start: Bool = true) -> Bool {
+        guard let parsed = InputParser.parse(text) else { return false }
+        var timer = QuickTimer(label: parsed.tag ?? TimeFormat.spoken(parsed.duration), duration: parsed.duration)
+        if start { timer.toggle(at: Date()) }
+        timers.append(timer)
+        refresh()
+        return true
+    }
+
+    func toggleTimer(_ id: QuickTimer.ID) { mutateTimer(id) { $0.toggle(at: Date()) } }
+    func resetTimer(_ id: QuickTimer.ID) { mutateTimer(id) { $0.reset() } }
+    func removeTimer(_ id: QuickTimer.ID) { timers.removeAll { $0.id == id }; refresh() }
+
+    private func mutateTimer(_ id: QuickTimer.ID, _ change: (inout QuickTimer) -> Void) {
+        guard let i = timers.firstIndex(where: { $0.id == id }) else { return }
+        change(&timers[i])
+        refresh()
+    }
+
+    private func tickTimers() {
+        let date = Date()
+        for i in timers.indices where timers[i].tick(at: date) {
+            Alerts.timerDone(timers[i].label, sound: prefs.soundEnabled, notify: prefs.notificationsEnabled)
+        }
     }
 
     // MARK: scenarios

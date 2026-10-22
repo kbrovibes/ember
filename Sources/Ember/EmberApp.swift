@@ -28,6 +28,11 @@ struct EmberApp: App {
         }
         .defaultSize(width: 760, height: 480)
 
+        Window("Timers", id: "timers") {
+            TimersView().environment(model)
+        }
+        .defaultSize(width: 720, height: 480)
+
         Window("Stats", id: "stats") {
             StatsView().environment(model)
         }

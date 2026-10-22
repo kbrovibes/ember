@@ -42,6 +42,14 @@ enum SnapshotTool {
         shot("stats", size: CGSize(width: 640, height: 470)) { StatsView() }
         shot("focus-idle", size: CGSize(width: 1280, height: 800)) { FocusView() }
 
+        for spec in ["5m #tea", "25m #write", "90s #eggs", "10m #laundry"] { model.addTimer(text: spec) }
+        shot("timers", size: CGSize(width: 720, height: 480)) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 280), spacing: 14)], spacing: 14) {
+                ForEach(model.timers) { TimerCard(timer: $0) }
+            }
+            .padding(28).background(Theme.bg)
+        }
+
         model.toggle()
         shot("popover-running", size: popover) { PopoverView() }
         shot("main-running", size: window) { MainView() }
