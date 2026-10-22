@@ -111,9 +111,7 @@ struct ThemePicker: View {
                 let selected = model.prefs.timerTheme == theme
                 Button { withAnimation(Theme.spring) { model.prefs.timerTheme = theme } } label: {
                     VStack(spacing: 6) {
-                        TimerFace(theme: theme, remaining: 13 * 60, duration: 20 * 60, tint: Theme.accent)
-                            .scaleEffect(0.36)
-                            .frame(width: 70, height: 40)
+                        TimerFace(theme: theme, remaining: 13 * 60, duration: 20 * 60, tint: Theme.accent, k: 0.36)
                             .padding(.vertical, 12)
                             .frame(maxWidth: .infinity)
                             .background(RoundedRectangle(cornerRadius: 10).fill(Theme.surface))

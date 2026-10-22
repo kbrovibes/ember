@@ -2,6 +2,7 @@ import SwiftUI
 import EmberCore
 
 struct MainView: View {
+    @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -9,6 +10,9 @@ struct MainView: View {
             Theme.bg
             VStack(spacing: 24) {
                 HStack(spacing: 4) {
+                    if model.timers.count > 1 {
+                        SortBar().transition(.opacity)
+                    }
                     Spacer()
                     Button { openWindow(id: "stats") } label: {
                         Image(systemName: "chart.bar")
@@ -30,6 +34,7 @@ struct MainView: View {
                 TimersPane()
             }
             .padding(32)
+            .animation(Theme.spring, value: model.timers.count > 1)
         }
         .onAppear { AppDelegate.openMain = { openWindow(id: "main") } }
         .frame(minWidth: 680, minHeight: 500)

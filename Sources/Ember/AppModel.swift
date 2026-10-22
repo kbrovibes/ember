@@ -59,6 +59,28 @@ final class AppModel {
 
     // MARK: timers
 
+    /// Timers in the user's chosen order. Ties keep the order they were added in.
+    var sortedTimers: [QuickTimer] {
+        let ascending = prefs.sortAscending
+        let indexed = Array(timers.enumerated())
+        let ordered: [(offset: Int, element: QuickTimer)]
+        switch prefs.sort {
+        case .added: ordered = indexed
+        case .name: ordered = indexed.sorted { order($0.element.label.localizedStandardCompare($1.element.label), $0.offset, $1.offset) }
+        case .remaining: ordered = indexed.sorted { order(compare($0.element.remaining(at: now), $1.element.remaining(at: now)), $0.offset, $1.offset) }
+        case .total: ordered = indexed.sorted { order(compare($0.element.duration, $1.element.duration), $0.offset, $1.offset) }
+        }
+        return (ascending ? ordered : ordered.reversed()).map(\.element)
+    }
+
+    /// Picking the active sort again flips its direction.
+    func chooseSort(_ sort: TimerSort) {
+        if prefs.sort == sort { prefs.sortAscending.toggle() } else { prefs.sort = sort; prefs.sortAscending = true }
+    }
+
+    private func compare(_ a: Double, _ b: Double) -> ComparisonResult { a < b ? .orderedAscending : (a > b ? .orderedDescending : .orderedSame) }
+    private func order(_ result: ComparisonResult, _ i: Int, _ j: Int) -> Bool { result == .orderedSame ? i < j : result == .orderedAscending }
+
     /// Free-form entry such as `water 2m` or `focus 20min`. Returns false if no duration can be found.
     @discardableResult
     func addTimer(text: String) -> Bool {

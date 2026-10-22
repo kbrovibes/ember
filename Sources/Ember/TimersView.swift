@@ -7,9 +7,9 @@ struct TimersPane: View {
 
     var body: some View {
         GeometryReader { outer in
-            VStack(spacing: 26) {
+            VStack(alignment: .leading, spacing: 26) {
                 TimerEntry(fontSize: min(max(outer.size.width * 0.055, 44), 88))
-                    .frame(maxWidth: min(outer.size.width * 0.72, 1000))
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 QuickStartRow(limit: 5)
 
                 if model.timers.isEmpty {
@@ -19,7 +19,7 @@ struct TimersPane: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    TimerGrid(timers: model.timers)
+                    TimerGrid(timers: model.sortedTimers)
                 }
             }
             .frame(width: outer.size.width, height: outer.size.height)
@@ -55,8 +55,7 @@ private struct TimerGrid: View {
                     let row = index / fit.columns
                     let inRow = min(fit.columns, count - row * fit.columns)
                     let indent = CGFloat(fit.columns - inRow) * (cell.width + gap) / 2
-                    TimerCard(timer: timer)
-                        .scaleEffect(fit.scale)
+                    TimerCard(timer: timer, scale: fit.scale)
                         .frame(width: cell.width, height: cell.height)
                         .position(x: origin.x + indent + CGFloat(index % fit.columns) * (cell.width + gap) + cell.width / 2,
                                   y: origin.y + CGFloat(row) * (cell.height + gap) + cell.height / 2)
@@ -82,40 +81,49 @@ private struct TimerGrid: View {
     }
 }
 
-struct TimerCard: View {
+/// Sized by `scale` through layout (every metric is multiplied), not by scaling a rendered layer, so it stays sharp at
+/// any size. Conforming to `Animatable` makes SwiftUI re-run `body` for each interpolated scale, so reflows stay crisp too.
+struct TimerCard: View, Animatable {
     static let size = CGSize(width: 224, height: 214)
     @Environment(AppModel.self) private var model
     let timer: QuickTimer
+    var scale: CGFloat = 1
+
+    var animatableData: CGFloat {
+        get { scale }
+        set { scale = newValue }
+    }
 
     var body: some View {
+        let k = scale
         let remaining = timer.remaining(at: model.now)
         let ringing = model.ringing.contains(timer.id)
         let tint = timer.isDone ? Theme.done : Theme.accent
 
-        VStack(spacing: 12) {
-            HStack(spacing: 6) {
+        VStack(spacing: 12 * k) {
+            HStack(spacing: 6 * k) {
                 Image(systemName: ringing ? "bell.fill" : "timer")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 11 * k, weight: .semibold))
                     .foregroundStyle(tint)
                     .symbolEffect(.bounce, options: .repeating, isActive: ringing)
                 TextField("Name", text: Binding(get: { timer.label }, set: { model.renameTimer(timer.id, to: $0) }))
                     .textFieldStyle(.plain)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 12 * k, weight: .semibold))
                     .foregroundStyle(Theme.ink2)
                     .lineLimit(1)
                 if !timer.isDone {
                     Button { model.removeTimer(timer.id) } label: {
-                        Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.ink3)
-                            .frame(width: 20, height: 20)
+                        Image(systemName: "xmark").font(.system(size: 9 * k, weight: .bold)).foregroundStyle(Theme.ink3)
+                            .frame(width: 20 * k, height: 20 * k)
                     }
                     .buttonStyle(PressStyle())
                     .help("Remove")
                 }
             }
 
-            TimerFace(theme: model.prefs.timerTheme, remaining: remaining, duration: timer.duration, tint: tint, running: timer.isRunning)
+            TimerFace(theme: model.prefs.timerTheme, remaining: remaining, duration: timer.duration, tint: tint, running: timer.isRunning, k: k)
 
-            HStack(spacing: 10) {
+            HStack(spacing: 10 * k) {
                 if timer.isDone {
                     round("checkmark", tint: tint, filled: true, help: "Done") { model.removeTimer(timer.id) }
                     round("arrow.counterclockwise", tint: tint, filled: false, help: "Restart") { model.toggleTimer(timer.id) }
@@ -125,22 +133,23 @@ struct TimerCard: View {
                 }
             }
         }
-        .padding(16)
-        .frame(width: Self.size.width, height: Self.size.height)
-        .background(RoundedRectangle(cornerRadius: 16).fill(ringing ? tint.opacity(0.12) : Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(ringing ? tint : (timer.isRunning ? tint.opacity(0.45) : Theme.line), lineWidth: ringing ? 2 : 1))
+        .padding(16 * k)
+        .frame(width: Self.size.width * k, height: Self.size.height * k)
+        .background(RoundedRectangle(cornerRadius: 16 * k).fill(ringing ? tint.opacity(0.12) : Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 16 * k).strokeBorder(ringing ? tint : (timer.isRunning ? tint.opacity(0.45) : Theme.line), lineWidth: ringing ? max(2, 2 * k) : max(1, k)))
         .animation(Theme.colorShift, value: timer.isRunning)
         .animation(Theme.colorShift, value: ringing)
     }
 
     private func round(_ symbol: String, tint: Color, filled: Bool, help: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        let k = scale
+        return Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 12 * k, weight: .semibold))
                 .foregroundStyle(filled ? Theme.onAccent : Theme.ink2)
-                .frame(width: 34, height: 34)
+                .frame(width: 34 * k, height: 34 * k)
                 .background(Circle().fill(filled ? tint : Theme.surface))
-                .overlay(Circle().strokeBorder(filled ? .clear : Theme.line))
+                .overlay(Circle().strokeBorder(filled ? .clear : Theme.line, lineWidth: max(1, k)))
         }
         .buttonStyle(PressStyle())
         .help(help)

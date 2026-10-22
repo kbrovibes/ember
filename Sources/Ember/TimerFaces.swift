@@ -9,7 +9,8 @@ enum TimerTheme: String, CaseIterable, Identifiable {
     var name: String { rawValue.capitalized }
 }
 
-/// Natural size of a face; cards and settings previews scale it.
+/// Faces are drawn at `k` times their design size by multiplying every metric, never by scaling a rendered layer,
+/// so text and strokes are rasterised at the final pixel size and stay sharp at any window size.
 enum FaceMetrics {
     static let size = CGSize(width: 192, height: 104)
 }
@@ -20,6 +21,7 @@ struct TimerFace: View {
     let duration: TimeInterval
     let tint: Color
     var running = false
+    var k: CGFloat = 1
 
     private var left: Double { duration > 0 ? min(1, max(0, remaining / duration)) : 0 }
     private var clock: String { TimeFormat.clock(remaining) }
@@ -36,7 +38,7 @@ struct TimerFace: View {
             case .tape: tape
             }
         }
-        .frame(width: FaceMetrics.size.width, height: FaceMetrics.size.height)
+        .frame(width: FaceMetrics.size.width * k, height: FaceMetrics.size.height * k)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(TimeFormat.spoken(remaining)) remaining")
     }
@@ -44,7 +46,7 @@ struct TimerFace: View {
     // MARK: Halo — ring dial, knob rides the leading edge of what remains
 
     private var halo: some View {
-        let d = FaceMetrics.size.height
+        let d = FaceMetrics.size.height * k
         return ZStack {
             Canvas { ctx, size in
                 let c = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -56,19 +58,19 @@ struct TimerFace: View {
                     var p = Path()
                     p.move(to: CGPoint(x: c.x + r1 * sin(a), y: c.y - r1 * cos(a)))
                     p.addLine(to: CGPoint(x: c.x + r2 * sin(a), y: c.y - r2 * cos(a)))
-                    ctx.stroke(p, with: .color(Theme.line2), lineWidth: major ? 1.3 : 0.8)
+                    ctx.stroke(p, with: .color(Theme.line2), lineWidth: (major ? 1.3 : 0.8) * k)
                 }
             }
-            Circle().stroke(Theme.surface2, lineWidth: 5).padding(14)
+            Circle().stroke(Theme.surface2, lineWidth: 5 * k).padding(14 * k)
             Circle().trim(from: 0, to: left)
-                .stroke(tint, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .stroke(tint, style: StrokeStyle(lineWidth: 5 * k, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .padding(14)
-            Circle().fill(Theme.surface).overlay(Circle().strokeBorder(tint, lineWidth: 2.5))
-                .frame(width: 13, height: 13)
-                .offset(y: -(d / 2 - 14))
+                .padding(14 * k)
+            Circle().fill(Theme.surface).overlay(Circle().strokeBorder(tint, lineWidth: 2.5 * k))
+                .frame(width: 13 * k, height: 13 * k)
+                .offset(y: -(d / 2 - 14 * k))
                 .rotationEffect(.degrees(left * 360))
-            TimeText(clock: clock, size: dialTextSize, weight: .light)
+            TimeText(clock: clock, size: dialTextSize * k, weight: .light)
         }
         .frame(width: d, height: d)
     }
@@ -76,11 +78,11 @@ struct TimerFace: View {
     // MARK: Mono — the numerals are the interface, one hairline underneath
 
     private var mono: some View {
-        VStack(spacing: 12) {
-            TimeText(clock: clock, size: 46, weight: .ultraLight)
+        VStack(spacing: 12 * k) {
+            TimeText(clock: clock, size: 46 * k, weight: .ultraLight)
             ZStack(alignment: .leading) {
-                Rectangle().fill(Theme.line2).frame(height: 1)
-                Rectangle().fill(tint).frame(width: FaceMetrics.size.width * (1 - left), height: 2)
+                Rectangle().fill(Theme.line2).frame(height: k)
+                Rectangle().fill(tint).frame(width: FaceMetrics.size.width * k * (1 - left), height: 2 * k)
             }
         }
     }
@@ -88,47 +90,47 @@ struct TimerFace: View {
     // MARK: Tide — a pill that drains
 
     private var tide: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            TimeText(clock: clock, size: 32, weight: .light)
+        VStack(alignment: .leading, spacing: 14 * k) {
+            TimeText(clock: clock, size: 32 * k, weight: .light)
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.surface2)
                 Capsule().fill(LinearGradient(colors: [tint.opacity(0.78), tint], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(16, FaceMetrics.size.width * left))
+                    .frame(width: max(16 * k, FaceMetrics.size.width * k * left))
             }
-            .frame(height: 16)
+            .frame(height: 16 * k)
         }
     }
 
     // MARK: Cinder — a vessel of liquid that settles
 
     private var cinder: some View {
-        let d = FaceMetrics.size.height
+        let d = FaceMetrics.size.height * k
         return TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !running)) { tl in
             let t = tl.date.timeIntervalSinceReferenceDate
-            let wave = WaveShape(level: left, phase: t * 1.8, amplitude: running ? 2.4 : 0)
+            let wave = WaveShape(level: left, phase: t * 1.8, amplitude: (running ? 2.4 : 0) * k)
             ZStack {
-                if running { Circle().fill(tint.opacity(0.22)).blur(radius: 14).scaleEffect(1.08) }
+                if running { Circle().fill(tint.opacity(0.22)).blur(radius: 14 * k).scaleEffect(1.08) }
                 Circle().fill(Theme.surface)
                 wave.fill(LinearGradient(colors: [tint.opacity(0.82), tint], startPoint: .top, endPoint: .bottom))
                     .clipShape(Circle())
                 if running { sparks(t: t, diameter: d) }
-                Circle().strokeBorder(Theme.line2, lineWidth: 1)
-                TimeText(clock: clock, size: dialTextSize, weight: .light)
-                TimeText(clock: clock, size: dialTextSize, weight: .light, color: Theme.onAccent).mask(wave)
+                Circle().strokeBorder(Theme.line2, lineWidth: max(1, k))
+                TimeText(clock: clock, size: dialTextSize * k, weight: .light)
+                TimeText(clock: clock, size: dialTextSize * k, weight: .light, color: Theme.onAccent).mask(wave)
             }
-            .frame(width: d - 6, height: d - 6)
+            .frame(width: d - 6 * k, height: d - 6 * k)
         }
         .frame(width: d, height: d)
     }
 
     private func sparks(t: Double, diameter: CGFloat) -> some View {
         let seeds: [(x: Double, speed: Double, offset: Double, r: Double)] = [(0.28, 0.21, 0.0, 2.6), (0.45, 0.17, 0.4, 1.8), (0.6, 0.24, 0.7, 2.2), (0.73, 0.19, 0.2, 1.6), (0.37, 0.15, 0.85, 1.4)]
-        let h = Double(diameter - 6)
+        let h = Double(diameter - 6 * k)
         return ZStack {
             ForEach(Array(seeds.enumerated()), id: \.offset) { _, s in
                 let u = (t * s.speed + s.offset).truncatingRemainder(dividingBy: 1)
                 Circle().fill(Theme.onAccent.opacity(0.7 * (1 - u)))
-                    .frame(width: s.r * 2, height: s.r * 2)
+                    .frame(width: s.r * 2 * k, height: s.r * 2 * k)
                     .position(x: h * s.x, y: h - h * left * u)
             }
         }
@@ -140,10 +142,10 @@ struct TimerFace: View {
     // MARK: Tape — a ruler slides under a fixed needle; the elapsed part is drawn in
 
     private var tape: some View {
-        VStack(spacing: 14) {
-            TimeText(clock: clock, size: 32, weight: .light)
-            TapeStrip(remaining: remaining, duration: duration, tint: tint)
-                .frame(width: FaceMetrics.size.width, height: 44)
+        VStack(spacing: 14 * k) {
+            TimeText(clock: clock, size: 32 * k, weight: .light)
+            TapeStrip(remaining: remaining, duration: duration, tint: tint, k: k)
+                .frame(width: FaceMetrics.size.width * k, height: 44 * k)
         }
     }
 }
@@ -191,18 +193,20 @@ private struct TapeStrip: View {
     let remaining: TimeInterval
     let duration: TimeInterval
     let tint: Color
+    let k: CGFloat
 
     var body: some View {
         Canvas { ctx, size in
             let unit = duration > 5400 ? 5.0 : 1.0
-            let pt: CGFloat = 10
+            let pt = 10 * k
             let value = remaining / 60 / unit
             let maxTick = Int((duration / 60 / unit).rounded(.up))
             let cx = size.width / 2
             func x(_ t: Double) -> CGFloat { cx + CGFloat(t - value) * pt }
 
-            let bar = CGRect(x: max(0, x(0)), y: 21, width: max(0, cx - max(0, x(0))), height: 3)
-            ctx.fill(Path(roundedRect: bar, cornerRadius: 1.5), with: .color(tint))
+            let left = max(0, x(0))
+            let bar = CGRect(x: left, y: 21 * k, width: max(0, cx - left), height: 3 * k)
+            ctx.fill(Path(roundedRect: bar, cornerRadius: 1.5 * k), with: .color(tint))
 
             let first = max(0, Int(floor(value - cx / pt)))
             let last = min(maxTick, Int(ceil(value + cx / pt)))
@@ -210,21 +214,20 @@ private struct TapeStrip: View {
                 for t in first...last {
                     let major = t % 5 == 0
                     var p = Path()
-                    p.move(to: CGPoint(x: x(Double(t)), y: major ? 6 : 12))
-                    p.addLine(to: CGPoint(x: x(Double(t)), y: 22))
-                    ctx.stroke(p, with: .color(major ? Theme.ink3 : Theme.line2), lineWidth: major ? 1.2 : 0.8)
+                    p.move(to: CGPoint(x: x(Double(t)), y: (major ? 6 : 12) * k))
+                    p.addLine(to: CGPoint(x: x(Double(t)), y: 22 * k))
+                    ctx.stroke(p, with: .color(major ? Theme.ink3 : Theme.line2), lineWidth: (major ? 1.2 : 0.8) * k)
                     if major {
-                        ctx.draw(Text("\(Int(Double(t) * unit))").font(.system(size: 9, weight: .medium)).foregroundColor(Theme.ink3),
-                                 at: CGPoint(x: x(Double(t)), y: 34))
+                        ctx.draw(Text("\(Int(Double(t) * unit))").font(.system(size: 9 * k, weight: .medium)).foregroundColor(Theme.ink3),
+                                 at: CGPoint(x: x(Double(t)), y: 34 * k))
                     }
                 }
             }
 
             var needle = Path()
-            needle.move(to: CGPoint(x: cx - 5, y: 0)); needle.addLine(to: CGPoint(x: cx + 5, y: 0)); needle.addLine(to: CGPoint(x: cx, y: 8)); needle.closeSubpath()
-            needle.move(to: CGPoint(x: cx, y: 8)); needle.addLine(to: CGPoint(x: cx, y: 28))
+            needle.move(to: CGPoint(x: cx - 5 * k, y: 0)); needle.addLine(to: CGPoint(x: cx + 5 * k, y: 0)); needle.addLine(to: CGPoint(x: cx, y: 8 * k)); needle.closeSubpath()
             ctx.fill(needle, with: .color(tint))
-            ctx.stroke(Path { $0.move(to: CGPoint(x: cx, y: 8)); $0.addLine(to: CGPoint(x: cx, y: 28)) }, with: .color(tint), lineWidth: 1.5)
+            ctx.stroke(Path { $0.move(to: CGPoint(x: cx, y: 8 * k)); $0.addLine(to: CGPoint(x: cx, y: 28 * k)) }, with: .color(tint), lineWidth: 1.5 * k)
         }
         .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.14), .init(color: .black, location: 0.86), .init(color: .clear, location: 1)], startPoint: .leading, endPoint: .trailing))
     }
