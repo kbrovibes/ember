@@ -24,9 +24,10 @@ Install permanently: `cp -R build/Ember.app /Applications/`
 | Skip / reset buttons | Move to next phase / restart this one |
 | Preset menu → Edit scenarios… | Pick or build your own focus/break cycle (saved) |
 | Expand button (main window) | Fullscreen focus mode; controls fade while running; `Esc` exits |
-| Grid button (main window) | Timers: any number of independent countdowns in a grid. Type `5m #tea` + Return to add; play/pause, reset, remove per card. Not saved across launches |
+| Grid button (main window) | Timers: any number of independent countdowns in a grid. Type `5m #tea` + Return to add; play/pause, reset, remove per card. Names are editable. Timers keep running across quit/relaunch |
 | Chart button (main window) | Stats: today, streak, last 7 days |
-| ⌘, | Settings: appearance (light by default), auto-start, sound, notifications, launch at login |
+| Quick-start chips (main window, popover, Timers) | One tap starts a named timer. Seeded with Focus 20m, Water 1h, Break 5m; named timers you add are remembered and the most-used show first. Right-click a chip to remove it |
+| ⌘, or gear button | Settings: mode (light default) + accent colour, auto-start, per-event sounds + volume, notifications, launch at login, data folder |
 
 Phases: Focus (ember red, flame) → Short break (teal, cup) → Long break (indigo, moon). Never colour-only: label and icon change too.
 Dock icon shows a progress bar while a timer runs.
@@ -35,7 +36,7 @@ Dock icon shows a progress bar while a timer runs.
 
 - `design/mocks.html` — the 5 design directions (open in browser). Chosen: **Tape + rolling numerals** (`DESIGN.md`).
 - `PLAN.md`, `RESUME.md` — milestones and resume notes.
-- Data: `~/Library/Application Support/Ember/` (`history.json`, `presets.json`).
+- Data: `~/Library/Application Support/Ember/` (`history.json`, `presets.json`, `state.json` = timers, quick-start usage, Pomodoro progress). Preferences are in UserDefaults.
 
 ## Develop
 

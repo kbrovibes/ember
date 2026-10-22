@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 import EmberCore
@@ -12,18 +13,23 @@ final class AppModel {
     /// Refreshed ~10x/s while running; views read this instead of polling the clock.
     private(set) var now = Date()
     private(set) var clockText = "25:00"
-    private(set) var timers: [QuickTimer] = []
+    private(set) var timers: [QuickTimer]
+    private(set) var templates: TimerTemplates
     @ObservationIgnored private let store: HistoryStore
     @ObservationIgnored private let presetStore: PresetStore
+    @ObservationIgnored private let stateStore: StateStore
     @ObservationIgnored private var ticker: Timer?
     @ObservationIgnored private let dock = DockProgress()
 
+    var dataFolder: URL { stateStore.url.deletingLastPathComponent() }
+
     var presets: [Preset] { Preset.builtIn + customPresets }
 
-    init(prefs: Prefs = Prefs(), store: HistoryStore = HistoryStore(), presetStore: PresetStore = PresetStore()) {
+    init(prefs: Prefs = Prefs(), store: HistoryStore = HistoryStore(), presetStore: PresetStore = PresetStore(), stateStore: StateStore = StateStore()) {
         self.prefs = prefs
         self.store = store
         self.presetStore = presetStore
+        self.stateStore = stateStore
         records = store.load()
         let custom = presetStore.load()
         customPresets = custom
@@ -32,6 +38,12 @@ final class AppModel {
         let preset = (Preset.builtIn + custom).first { $0.id == prefs.presetID } ?? .classic
         engine = PomodoroEngine(preset: preset)
         engine.autoStartNext = prefs.autoStartNext
+
+        let saved = stateStore.load()
+        templates = saved.templates
+        let launch = Date()
+        timers = saved.timers.map { var t = $0; t.tick(at: launch); return t }
+        if let snapshot = saved.engine { engine.restore(snapshot) }
         engine.onEvent = { [weak self] event in
             MainActor.assumeIsolated { self?.handle(event) }
         }
@@ -51,6 +63,9 @@ final class AppModel {
 
         refresh()
         Alerts.requestAuthorization()
+        NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.persist() }
+        }
     }
 
     var summary: HistorySummary { History.summarize(records) }
@@ -59,13 +74,13 @@ final class AppModel {
 
     // MARK: actions
 
-    func toggle() { engine.toggle(); refresh() }
-    func reset() { engine.reset(); refresh() }
-    func skip() { engine.skip(); refresh() }
+    func toggle() { engine.toggle(); commit() }
+    func reset() { engine.reset(); commit() }
+    func skip() { engine.skip(); commit() }
 
     func setMinutes(_ minutes: Double) {
         engine.setDuration(minutes * 60)
-        refresh()
+        commit()
     }
 
     /// Red Hot Timer–style shorthand: `25`, `1h30m`, `5m/1m #tag`. Returns false if unparseable.
@@ -74,44 +89,56 @@ final class AppModel {
         guard let parsed = InputParser.parse(text) else { return false }
         engine.reset()
         engine.setDuration(parsed.duration)
-        refresh()
+        commit()
         return true
     }
 
     func select(_ preset: Preset) {
         prefs.presetID = preset.id
         engine.select(preset)
-        refresh()
+        commit()
     }
 
     // MARK: quick timers
 
-    /// Accepts the same shorthand as the main field (`5m`, `1h30m`, `90s #tea`). Returns false if unparseable.
+    /// `text` accepts the same shorthand as the main field (`5m`, `1h30m`, `90s #tea`). Returns false if unparseable.
     @discardableResult
-    func addTimer(text: String, start: Bool = true) -> Bool {
+    func addTimer(text: String, name: String = "") -> Bool {
         guard let parsed = InputParser.parse(text) else { return false }
-        var timer = QuickTimer(label: parsed.tag ?? TimeFormat.spoken(parsed.duration), duration: parsed.duration)
-        if start { timer.toggle(at: Date()) }
-        timers.append(timer)
-        refresh()
+        addTimer(name: name.isEmpty ? (parsed.tag ?? "") : name, duration: parsed.duration)
         return true
     }
 
+    /// Named timers are remembered, so the ones used most show up as quick-start chips next launch.
+    func addTimer(name: String, duration: TimeInterval) {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        var timer = QuickTimer(label: trimmed.isEmpty ? TimeFormat.spoken(duration) : trimmed, duration: duration)
+        timer.toggle(at: Date())
+        timers.append(timer)
+        if !trimmed.isEmpty { templates.record(name: trimmed, duration: duration, at: Date()) }
+        commit()
+    }
+
+    func startTemplate(_ template: TimerTemplate) { addTimer(name: template.name, duration: template.duration) }
+    func removeTemplate(_ template: TimerTemplate) { templates.remove(id: template.id); commit() }
+    func renameTimer(_ id: QuickTimer.ID, to label: String) { mutateTimer(id) { $0.label = label } }
+
     func toggleTimer(_ id: QuickTimer.ID) { mutateTimer(id) { $0.toggle(at: Date()) } }
     func resetTimer(_ id: QuickTimer.ID) { mutateTimer(id) { $0.reset() } }
-    func removeTimer(_ id: QuickTimer.ID) { timers.removeAll { $0.id == id }; refresh() }
+    func removeTimer(_ id: QuickTimer.ID) { timers.removeAll { $0.id == id }; commit() }
 
     private func mutateTimer(_ id: QuickTimer.ID, _ change: (inout QuickTimer) -> Void) {
         guard let i = timers.firstIndex(where: { $0.id == id }) else { return }
         change(&timers[i])
-        refresh()
+        commit()
     }
 
     private func tickTimers() {
         let date = Date()
         for i in timers.indices where timers[i].tick(at: date) {
-            Alerts.timerDone(timers[i].label, sound: prefs.soundEnabled, notify: prefs.notificationsEnabled)
+            Alerts.timerDone(timers[i].label, prefs: prefs)
         }
+        persist()
     }
 
     // MARK: scenarios
@@ -133,7 +160,7 @@ final class AppModel {
         guard let i = customPresets.firstIndex(where: { $0.id == preset.id }) else { return }
         customPresets[i] = preset
         presetStore.save(customPresets)
-        if engine.preset.id == preset.id && engine.isIdle { engine.select(preset); refresh() }
+        if engine.preset.id == preset.id && engine.isIdle { engine.select(preset); commit() }
     }
 
     func deletePreset(_ id: String) {
@@ -143,6 +170,15 @@ final class AppModel {
     }
 
     // MARK: internals
+
+    private func commit() {
+        refresh()
+        persist()
+    }
+
+    private func persist() {
+        stateStore.save(AppState(timers: timers, templates: templates, engine: engine.snapshot()))
+    }
 
     private func refresh() {
         now = Date()
@@ -158,6 +194,7 @@ final class AppModel {
             store.save(records)
         }
         engine.autoStartNext = prefs.autoStartNext
-        Alerts.segmentEnded(ended, next: engine.phase, sound: prefs.soundEnabled, notify: prefs.notificationsEnabled)
+        Alerts.segmentEnded(ended, next: engine.phase, prefs: prefs)
+        persist()
     }
 }

@@ -4,25 +4,20 @@ import EmberCore
 /// Independent countdowns shown as a grid; the Pomodoro cycle lives in the main window.
 struct TimersView: View {
     @Environment(AppModel.self) private var model
-    @State private var text = ""
+    @State private var name = ""
+    @State private var duration = ""
     @State private var invalid = false
 
     private let columns = [GridItem(.adaptive(minimum: 200, maximum: 280), spacing: 14)]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Timers").font(.system(size: 22, weight: .semibold))
+
             HStack(spacing: 10) {
-                Text("Timers").font(.system(size: 22, weight: .semibold))
-                Spacer()
-                TextField("5m, 1h30m, 90s #tea", text: $text)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13))
-                    .padding(.horizontal, 12)
-                    .frame(width: 220, height: 32)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Theme.surface))
-                    .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(invalid ? Theme.accent(.focus) : Theme.line))
-                    .onSubmit(add)
-                    .onChange(of: text) { invalid = false }
+                field("Name (optional)", text: $name, width: nil)
+                field("20m, 1h30m, 90s", text: $duration, width: 130, invalid: invalid)
+                    .onChange(of: duration) { invalid = false }
                 Button(action: add) {
                     Image(systemName: "plus")
                         .font(.system(size: 12, weight: .semibold))
@@ -34,10 +29,15 @@ struct TimersView: View {
                 .help("Add timer")
             }
 
+            HStack(spacing: 10) {
+                Text("Quick start").font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.ink3)
+                QuickStartRow(limit: 5)
+            }
+
             if model.timers.isEmpty {
                 VStack(spacing: 6) {
-                    Text("No timers yet").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.ink2)
-                    Text("Type a duration above and press Return. Add as many as you like.")
+                    Text("No timers running").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.ink2)
+                    Text("Tap a quick timer, or name one and give it a duration. Add as many as you like.")
                         .font(.system(size: 12)).foregroundStyle(Theme.ink3)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -54,14 +54,31 @@ struct TimersView: View {
             }
         }
         .padding(28)
-        .frame(minWidth: 520, minHeight: 360, alignment: .topLeading)
+        .frame(minWidth: 640, minHeight: 380, alignment: .topLeading)
         .background(Theme.bg)
     }
 
+    private func field(_ prompt: String, text: Binding<String>, width: CGFloat?, invalid: Bool = false) -> some View {
+        TextField(prompt, text: text)
+            .textFieldStyle(.plain)
+            .font(.system(size: 13))
+            .padding(.horizontal, 12)
+            .frame(width: width, height: 32)
+            .frame(maxWidth: width == nil ? .infinity : nil)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.surface))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(invalid ? Theme.accent(.focus) : Theme.line))
+            .onSubmit(add)
+    }
+
     private func add() {
-        let trimmed = text.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return }
-        if model.addTimer(text: trimmed) { text = "" } else { invalid = true }
+        let spec = duration.trimmingCharacters(in: .whitespaces)
+        guard !spec.isEmpty else { invalid = true; return }
+        if model.addTimer(text: spec, name: name) {
+            name = ""
+            duration = ""
+        } else {
+            invalid = true
+        }
     }
 }
 
@@ -80,10 +97,14 @@ struct TimerCard: View {
                 Image(systemName: timer.isDone ? "checkmark.circle.fill" : "timer")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(tint)
-                Text(timer.isDone ? "\(timer.label) · Done" : timer.label)
+                TextField("Name", text: Binding(get: { timer.label }, set: { model.renameTimer(timer.id, to: $0) }))
+                    .textFieldStyle(.plain)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Theme.ink2)
                     .lineLimit(1)
+                if timer.isDone {
+                    Text("Done").font(.system(size: 11, weight: .medium)).foregroundStyle(tint)
+                }
                 Spacer()
                 Button { model.removeTimer(timer.id) } label: {
                     Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.ink3)

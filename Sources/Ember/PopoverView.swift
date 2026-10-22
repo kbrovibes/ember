@@ -26,6 +26,11 @@ struct PopoverView: View {
 
             CycleStrip()
 
+            QuickStartRow(limit: 2) {
+                openWindow(id: "timers")
+                NSApp.activate(ignoringOtherApps: true)
+            }
+
             quickInput
 
             Divider().overlay(Theme.line)

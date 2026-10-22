@@ -1,8 +1,8 @@
 import Foundation
 
 /// An independent countdown, separate from the Pomodoro cycle.
-public struct QuickTimer: Identifiable, Equatable, Sendable {
-    public enum State: Equatable, Sendable {
+public struct QuickTimer: Identifiable, Equatable, Sendable, Codable {
+    public enum State: Equatable, Sendable, Codable {
         case idle
         case running(endsAt: Date)
         case paused(remaining: TimeInterval)

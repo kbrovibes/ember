@@ -10,9 +10,9 @@ enum Alerts {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
-    static func segmentEnded(_ ended: Phase, next: Phase, sound: Bool, notify: Bool) {
-        if sound { play(ended == .focus ? "Glass" : "Pop") }
-        guard notify, canNotify else { return }
+    static func segmentEnded(_ ended: Phase, next: Phase, prefs: Prefs) {
+        if prefs.soundEnabled { play(ended == .focus ? prefs.focusEndSound : prefs.breakEndSound, volume: prefs.soundVolume) }
+        guard prefs.notificationsEnabled, canNotify else { return }
 
         let content = UNMutableNotificationContent()
         switch ended {
@@ -27,16 +27,18 @@ enum Alerts {
         UNUserNotificationCenter.current().add(request)
     }
 
-    static func timerDone(_ label: String, sound: Bool, notify: Bool) {
-        if sound { play("Glass") }
-        guard notify, canNotify else { return }
+    static func timerDone(_ label: String, prefs: Prefs) {
+        if prefs.soundEnabled { play(prefs.timerSound, volume: prefs.soundVolume) }
+        guard prefs.notificationsEnabled, canNotify else { return }
         let content = UNMutableNotificationContent()
         content.title = "Timer done"
         content.body = label
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
     }
 
-    static func play(_ name: String) {
-        NSSound(named: NSSound.Name(name))?.play()
+    static func play(_ name: String, volume: Double) {
+        guard let sound = NSSound(named: NSSound.Name(name)) else { return }
+        sound.volume = Float(volume)
+        sound.play()
     }
 }

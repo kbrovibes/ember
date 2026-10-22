@@ -39,6 +39,14 @@ struct MainView: View {
                     }
                     .buttonStyle(PressStyle())
                     .help("Stats")
+                    SettingsLink {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Theme.ink2)
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(PressStyle())
+                    .help("Settings (⌘,)")
                     PresetMenu()
                 }
 
@@ -51,6 +59,8 @@ struct MainView: View {
                     .frame(maxWidth: 520)
 
                 Controls(size: 64)
+
+                QuickStartRow(limit: 4) { openWindow(id: "timers") }
 
                 Spacer(minLength: 0)
 

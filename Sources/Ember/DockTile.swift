@@ -43,7 +43,7 @@ private final class DockTileView: NSView {
         var fill = track
         fill.size.width = max(track.height, track.width * progress)
         let hex = switch phase {
-        case .focus: "CC4317"
+        case .focus: Prefs.current?.accent.lightHex ?? "CC4317"
         case .shortBreak: "2C7A8C"
         case .longBreak: "5A5FB8"
         }

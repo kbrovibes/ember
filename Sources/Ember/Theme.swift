@@ -35,7 +35,7 @@ enum Theme {
 
     static func accent(_ phase: Phase) -> Color {
         switch phase {
-        case .focus: Color(light: "CC4317", dark: "FF8A5B")
+        case .focus: (Prefs.current?.accent ?? .ember).accent
         case .shortBreak: Color(light: "2C7A8C", dark: "6CC4D6")
         case .longBreak: Color(light: "5A5FB8", dark: "9EA3F0")
         }
@@ -43,9 +43,44 @@ enum Theme {
 
     static func soft(_ phase: Phase) -> Color {
         switch phase {
-        case .focus: Color(light: "FCEDE6", dark: "2B1710")
+        case .focus: (Prefs.current?.accent ?? .ember).soft
         case .shortBreak: Color(light: "E4F1F4", dark: "10252A")
         case .longBreak: Color(light: "ECEDF9", dark: "1A1B33")
+        }
+    }
+}
+
+/// Colour theme for the focus phase and timer cards. Break phases keep their own colours.
+enum AccentTheme: String, CaseIterable, Identifiable {
+    case ember, plum, moss, graphite
+
+    var id: String { rawValue }
+    var name: String { rawValue.capitalized }
+
+    var lightHex: String {
+        switch self {
+        case .ember: "CC4317"
+        case .plum: "8A3F9E"
+        case .moss: "3E7D4F"
+        case .graphite: "3F3F46"
+        }
+    }
+
+    var accent: Color {
+        switch self {
+        case .ember: Color(light: "CC4317", dark: "FF8A5B")
+        case .plum: Color(light: "8A3F9E", dark: "D39BE4")
+        case .moss: Color(light: "3E7D4F", dark: "86CF99")
+        case .graphite: Color(light: "3F3F46", dark: "D4D4D8")
+        }
+    }
+
+    var soft: Color {
+        switch self {
+        case .ember: Color(light: "FCEDE6", dark: "2B1710")
+        case .plum: Color(light: "F4EAF7", dark: "261430")
+        case .moss: Color(light: "E8F3EB", dark: "11261A")
+        case .graphite: Color(light: "EFEFF1", dark: "222226")
         }
     }
 }

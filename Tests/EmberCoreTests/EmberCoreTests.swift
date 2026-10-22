@@ -195,3 +195,46 @@ import Foundation
         #expect(timer.progress(at: t0) == 0)
     }
 }
+
+@Suite struct PersistenceTests {
+    let t0 = Date(timeIntervalSince1970: 1_000)
+
+    @Test func quickTimerSurvivesEncoding() throws {
+        var timer = QuickTimer(label: "tea", duration: 300)
+        timer.toggle(at: t0)
+        let decoded = try JSONDecoder().decode(QuickTimer.self, from: JSONEncoder().encode(timer))
+        #expect(decoded == timer)
+    }
+
+    @Test func templatesRankByUseThenRecency() {
+        var templates = TimerTemplates()
+        templates.record(name: "Water", duration: 3600, at: t0)
+        templates.record(name: "water", duration: 3600, at: t0.addingTimeInterval(10))
+        templates.record(name: "Stretch", duration: 120, at: t0.addingTimeInterval(20))
+        let names = templates.top(3).map(\.name)
+        #expect(names == ["Water", "Stretch", "Focus"])
+        #expect(templates.items.filter { $0.id.hasPrefix("water") }.count == 1)
+    }
+
+    @Test func seedsAreRemovable() {
+        var templates = TimerTemplates()
+        templates.remove(id: TimerTemplates.seeds[0].id)
+        #expect(templates.items.count == TimerTemplates.seeds.count - 1)
+    }
+
+    @Test func engineRestoresMidSegmentAndAdvancesWhenExpired() {
+        let a = PomodoroEngine(preset: .classic, clock: { Date(timeIntervalSince1970: 1_000) })
+        a.start()
+        let saved = a.snapshot()
+
+        let b = PomodoroEngine(preset: .classic, clock: { Date(timeIntervalSince1970: 1_100) })
+        b.restore(saved)
+        #expect(b.isRunning)
+        #expect(b.remaining(at: Date(timeIntervalSince1970: 1_100)) == 1_400)
+
+        let c = PomodoroEngine(preset: .classic, clock: { Date(timeIntervalSince1970: 9_000) })
+        c.restore(saved)
+        #expect(c.isIdle)
+        #expect(c.phase == .shortBreak)
+    }
+}

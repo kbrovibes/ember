@@ -12,7 +12,7 @@ enum SnapshotTool {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         let scratch = FileManager.default.temporaryDirectory.appendingPathComponent("ember-snapshot-\(UUID().uuidString)")
-        let model = AppModel(prefs: Prefs(defaults: UserDefaults(suiteName: "ember.snapshot")!), store: HistoryStore(directory: scratch), presetStore: PresetStore(directory: scratch))
+        let model = AppModel(prefs: Prefs(defaults: UserDefaults(suiteName: "ember.snapshot")!), store: HistoryStore(directory: scratch), presetStore: PresetStore(directory: scratch), stateStore: StateStore(directory: scratch))
         model.prefs.appearance = "light"
 
         func shot<V: View>(_ name: String, size: CGSize, dark: Bool = false, @ViewBuilder _ content: () -> V) {
@@ -43,6 +43,10 @@ enum SnapshotTool {
         shot("focus-idle", size: CGSize(width: 1280, height: 800)) { FocusView() }
 
         for spec in ["5m #tea", "25m #write", "90s #eggs", "10m #laundry"] { model.addTimer(text: spec) }
+        shot("timers-page", size: CGSize(width: 760, height: 200)) {
+            VStack(alignment: .leading, spacing: 18) { QuickStartRow(limit: 5) }.padding(28).background(Theme.bg)
+        }
+        shot("settings", size: CGSize(width: 460, height: 620)) { SettingsView() }
         shot("timers", size: CGSize(width: 720, height: 480)) {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 280), spacing: 14)], spacing: 14) {
                 ForEach(model.timers) { TimerCard(timer: $0) }

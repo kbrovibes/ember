@@ -9,7 +9,7 @@ public enum EngineEvent: Equatable, Sendable {
 
 @Observable
 public final class PomodoroEngine {
-    public enum Status: Equatable, Sendable {
+    public enum Status: Equatable, Sendable, Codable {
         case idle
         case running(endsAt: Date)
         case paused(remaining: TimeInterval)
@@ -93,6 +93,30 @@ public final class PomodoroEngine {
     public func tick(now: Date? = nil) {
         guard case .running(let end) = status, (now ?? clock()) >= end else { return }
         advance(emitEvent: true)
+    }
+
+    public struct Snapshot: Codable, Equatable, Sendable {
+        public var presetID: String
+        public var index: Int
+        public var status: Status
+        public var completedFocusSessions: Int
+        public var durations: [TimeInterval]
+    }
+
+    public func snapshot() -> Snapshot {
+        Snapshot(presetID: preset.id, index: index, status: status, completedFocusSessions: completedFocusSessions, durations: segments.map(\.duration))
+    }
+
+    /// Reapplies saved progress onto the already-selected preset. A segment that finished while the app was closed moves on, idle.
+    public func restore(_ saved: Snapshot, now: Date? = nil) {
+        guard saved.presetID == preset.id, segments.indices.contains(saved.index) else { return }
+        if saved.durations.count == segments.count {
+            for i in segments.indices { segments[i].duration = saved.durations[i] }
+        }
+        index = saved.index
+        completedFocusSessions = saved.completedFocusSessions
+        status = saved.status
+        if case .running(let end) = saved.status, (now ?? clock()) >= end { advance(emitEvent: false) }
     }
 
     private func advance(emitEvent: Bool) {
