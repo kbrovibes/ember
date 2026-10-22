@@ -79,6 +79,10 @@ h2{font:600 clamp(26px,3.6vw,38px)/1.15 var(--display);letter-spacing:-.02em;tex
 .note{max-width:640px;margin:22px auto 0;text-align:center;font-size:13.5px;color:var(--ink3)}
 .note code{background:var(--surface2);border-radius:6px;padding:2px 6px;font-size:12.5px}
 
+.cmd{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:640px;margin:26px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 10px 10px 18px}
+.cmd code{font:13.5px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);overflow-x:auto;white-space:nowrap}
+.cmd button{all:unset;cursor:pointer;flex:none;height:32px;padding:0 14px;border-radius:8px;background:var(--surface2);font:600 13px var(--font);color:var(--ink2)}
+.cmd button:hover{background:var(--line)}
 .final{margin:96px 0 0;padding:64px 24px;text-align:center;background:var(--surface);border-top:1px solid var(--line)}
 footer{padding:28px 0 40px;text-align:center;font-size:13px;color:var(--ink3)}
 footer a{text-decoration:underline;text-underline-offset:3px}
@@ -167,9 +171,10 @@ footer a{text-decoration:underline;text-underline-offset:3px}
     <ol class="steps">
       <li><b>Download</b>Grab Ember.dmg from the latest release.</li>
       <li><b>Drag to Applications</b>Open the disk image and drop Ember onto the Applications folder.</li>
-      <li><b>Open it once</b>Right-click Ember, choose Open, then Open again.</li>
+      <li><b>Allow it once</b>macOS blocks apps that aren’t notarized. Paste the command below in Terminal, then open Ember.</li>
     </ol>
-    <p class="note">Ember is signed ad hoc, not with a paid Developer ID, so macOS asks you to confirm the first launch. Or run <code>xattr -dr com.apple.quarantine /Applications/Ember.app</code>.</p>
+    <div class="cmd"><code id="cmd">xattr -dr com.apple.quarantine /Applications/Ember.app</code><button id="copy" type="button">Copy</button></div>
+    <p class="note">Why? Ember is signed ad hoc, not with a paid Apple Developer ID, so on current macOS the first-launch dialog only offers “Move to Trash”. The command above clears the download flag. Prefer clicking? Try to open Ember, then System Settings → Privacy &amp; Security → <b>Open Anyway</b>.</p>
   </section>
 </div>
 
@@ -197,6 +202,8 @@ function pick(t){
 }
 tabs.addEventListener('click',e=>{const b=e.target.closest('button');if(b)pick(b.dataset.t)});
 pick('tape');
+
+document.getElementById('copy').addEventListener('click',e=>{navigator.clipboard.writeText(document.getElementById('cmd').textContent).then(()=>{e.target.textContent='Copied';setTimeout(()=>e.target.textContent='Copy',1600)})});
 
 // On GitHub Pages (owner.github.io/repo/) point the buttons at this repo's latest release.
 (function(){

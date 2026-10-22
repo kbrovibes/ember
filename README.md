@@ -41,15 +41,21 @@
 
 1. Download **[Ember.dmg](../../releases/latest/download/Ember.dmg)** from the [latest release](../../releases/latest).
 2. Drag Ember to Applications.
-3. The first time, right-click Ember and choose **Open** (see below).
+3. Allow it once (see below), then open it normally.
 
-### Why the first-launch warning?
+### First launch: "Ember can't be opened" / "Move to Trash"
 
-Ember is signed ad hoc, not with a paid Apple Developer ID, so macOS Gatekeeper asks you to confirm the first launch. Right-click → Open → Open, once. Or from Terminal:
+Ember isn't notarized (that needs a paid Apple Developer account), so macOS blocks the first launch of a downloaded copy. On current macOS the dialog offers only **Move to Trash**, and right-click → Open no longer helps. Do one of these, once:
+
+**Terminal (fastest)**
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/Ember.app
 ```
+
+Then open Ember as usual.
+
+**Or System Settings**: try to open Ember once, then go to *System Settings → Privacy & Security*, scroll to *Security*, and click **Open Anyway** next to Ember.
 
 ## Using it
 
