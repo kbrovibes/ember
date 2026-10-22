@@ -30,6 +30,8 @@ enum Theme {
     static let onAccent = Color(light: "FFFFFF", dark: "1A0D07")
 
     static let spring = Animation.spring(response: 0.39, dampingFraction: 0.81)
+    /// Softer than `spring`: used when timer cards reflow after the window or the timer count changes.
+    static let layout = Animation.spring(response: 0.5, dampingFraction: 0.86)
     static let colorShift = Animation.easeInOut(duration: 0.7)
 
     static var accent: Color { (Prefs.current?.accent ?? .ember).accent }

@@ -9,7 +9,6 @@ struct MainView: View {
             Theme.bg
             VStack(spacing: 24) {
                 HStack(spacing: 4) {
-                    Text("Ember").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.ink3)
                     Spacer()
                     Button { openWindow(id: "stats") } label: {
                         Image(systemName: "chart.bar")
