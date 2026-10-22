@@ -31,6 +31,7 @@ struct SettingsView: View {
             }
 
             Section("General") {
+                Toggle("Go distraction-free after 10 minutes idle", isOn: $prefs.autoZen)
                 Toggle("Show countdown in menu bar", isOn: $prefs.menuBarShowsTime)
                 Toggle("Launch at login", isOn: Binding(get: { loginEnabled }, set: setLaunchAtLogin))
                 if let loginError {

@@ -41,6 +41,9 @@ enum SnapshotTool {
         for spec in ["lunch 12m", "stretch 3m", "email 15m"] { model.addTimer(text: spec) }
         shot("main-seven", size: window) { MainView() }
         shot("main-seven-large", size: CGSize(width: 1600, height: 1000)) { MainView() }
+        model.enterZen()
+        shot("zen", size: window) { MainView() }
+        model.exitZen()
         shot("main-large", size: CGSize(width: 1600, height: 1000)) { MainView() }
         shot("popover-timers", size: popover) { PopoverView() }
         shot("themepicker", size: CGSize(width: 440, height: 120)) { ThemePicker().padding(20).background(Theme.bg) }

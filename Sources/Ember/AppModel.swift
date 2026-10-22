@@ -12,6 +12,11 @@ final class AppModel {
     private(set) var templates: TimerTemplates
     /// Timers that have finished and are still alarming; they ring on repeat until dismissed.
     private(set) var ringing: Set<QuickTimer.ID> = []
+    /// Distraction-free mode: only the timers are shown.
+    private(set) var zen = false
+    @ObservationIgnored private var lastInteraction = Date()
+    @ObservationIgnored private var idleCheck: Timer?
+    static let idleBeforeZen: TimeInterval = 10 * 60
     /// Refreshed ~10x/s while a timer runs; views read this instead of polling the clock.
     private(set) var now = Date()
     @ObservationIgnored private let store: HistoryStore
@@ -44,6 +49,7 @@ final class AppModel {
 
         refresh()
         Alerts.requestAuthorization()
+        watchForIdle()
         NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.persist() }
         }
@@ -105,11 +111,42 @@ final class AppModel {
 
     func toggleTimer(_ id: QuickTimer.ID) { dismissAlarm(id); mutateTimer(id) { $0.toggle(at: Date()) } }
     func resetTimer(_ id: QuickTimer.ID) { dismissAlarm(id); mutateTimer(id) { $0.reset() } }
-    func removeTimer(_ id: QuickTimer.ID) { dismissAlarm(id); timers.removeAll { $0.id == id }; commit() }
+    func removeTimer(_ id: QuickTimer.ID) {
+        dismissAlarm(id)
+        timers.removeAll { $0.id == id }
+        if timers.isEmpty { zen = false }
+        commit()
+    }
 
     func dismissAlarm(_ id: QuickTimer.ID) {
         guard ringing.remove(id) != nil else { return }
         if ringing.isEmpty { alarm?.invalidate(); alarm = nil }
+    }
+
+    // MARK: distraction-free mode
+
+    func enterZen() { guard !timers.isEmpty else { return }; zen = true }
+    func exitZen() { zen = false; lastInteraction = Date() }
+
+    /// Any input to the app counts as interaction. After ten quiet minutes with timers on screen, hide everything but the timers.
+    private func watchForIdle() {
+        NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .leftMouseDown, .rightMouseDown, .keyDown, .scrollWheel]) { [weak self] event in
+            MainActor.assumeIsolated { self?.lastInteraction = Date() }
+            return event
+        }
+        let check = Timer(timeInterval: 10, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                NSApp.windows.forEach { $0.acceptsMouseMovedEvents = true }
+                let mainVisible = NSApp.windows.contains { $0.title == "Ember" && $0.isVisible }
+                if self.prefs.autoZen, !self.zen, !self.timers.isEmpty, mainVisible,
+                   Date().timeIntervalSince(self.lastInteraction) >= Self.idleBeforeZen {
+                    self.zen = true
+                }
+            }
+        }
+        RunLoop.main.add(check, forMode: .common)
+        idleCheck = check
     }
 
     // MARK: internals

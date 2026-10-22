@@ -7,6 +7,10 @@ struct TimersPane: View {
 
     var body: some View {
         GeometryReader { outer in
+            if model.zen {
+                TimerGrid(timers: model.sortedTimers)
+                    .frame(width: outer.size.width, height: outer.size.height)
+            } else {
             VStack(alignment: .leading, spacing: 26) {
                 TimerEntry(fontSize: min(max(outer.size.width * 0.055, 44), 88))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -23,6 +27,7 @@ struct TimersPane: View {
                 }
             }
             .frame(width: outer.size.width, height: outer.size.height)
+            }
         }
     }
 }
@@ -32,12 +37,14 @@ struct TimersPane: View {
 /// kicks in when the arrangement itself changes (columns, or a timer added or removed).
 private struct TimerGrid: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(AppModel.self) private var model
     let timers: [QuickTimer]
     private let gap: CGFloat = 14
 
     private struct Arrangement: Equatable {
         var columns: Int
         var ids: [QuickTimer.ID]
+        var zen: Bool
     }
 
     var body: some View {
@@ -63,7 +70,7 @@ private struct TimerGrid: View {
                 }
             }
             .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
-            .animation(reduceMotion ? nil : Theme.layout, value: Arrangement(columns: fit.columns, ids: timers.map(\.id)))
+            .animation(reduceMotion ? nil : Theme.layout, value: Arrangement(columns: fit.columns, ids: timers.map(\.id), zen: model.zen))
         }
     }
 
@@ -94,13 +101,47 @@ struct TimerCard: View, Animatable {
         set { scale = newValue }
     }
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// A soft lub-dub every 1.5s, 0...1, so finished timers are easy to spot at a glance.
+    private static func heartbeat(_ t: Double) -> Double {
+        let phase = t.truncatingRemainder(dividingBy: 1.5)
+        func bump(_ centre: Double) -> Double { exp(-pow((phase - centre) / 0.07, 2)) }
+        return min(1, bump(0.15) + 0.65 * bump(0.45))
+    }
+
     var body: some View {
-        let k = scale
+        if timer.isDone {
+            TimelineView(.animation) { tl in
+                let p = reduceMotion ? 0.5 : Self.heartbeat(tl.date.timeIntervalSinceReferenceDate)
+                card(k: scale * (reduceMotion ? 1 : 1 + 0.03 * p), glow: p)
+            }
+        } else {
+            card(k: scale, glow: 0)
+        }
+    }
+
+    @ViewBuilder
+    private func card(k: CGFloat, glow: Double) -> some View {
         let remaining = timer.remaining(at: model.now)
         let ringing = model.ringing.contains(timer.id)
         let tint = timer.isDone ? Theme.done : Theme.accent
+        let bare = model.zen && !timer.isDone
+        let done = timer.isDone
+        let fill: Color = done ? tint.opacity(0.06 + 0.10 * glow) : Theme.surface
+        let idleBorder: Color = timer.isRunning ? tint.opacity(0.45) : Theme.line
+        let border: Color = done ? tint.opacity(0.55 + 0.45 * glow) : idleBorder
+        let borderWidth: CGFloat = done ? max(2, 2 * k) : max(1, k)
+        let glowColor: Color = done ? tint.opacity(0.10 + 0.30 * glow) : .clear
 
         VStack(spacing: 12 * k) {
+            if bare {
+                Spacer(minLength: 0)
+                Text(timer.label)
+                    .font(.system(size: 12 * k, weight: .semibold))
+                    .foregroundStyle(Theme.ink2)
+                    .lineLimit(1)
+            } else {
             HStack(spacing: 6 * k) {
                 Image(systemName: ringing ? "bell.fill" : "timer")
                     .font(.system(size: 11 * k, weight: .semibold))
@@ -120,29 +161,34 @@ struct TimerCard: View, Animatable {
                     .help("Remove")
                 }
             }
+            }
 
             TimerFace(theme: model.prefs.timerTheme, remaining: remaining, duration: timer.duration, tint: tint, running: timer.isRunning, k: k)
 
+            if bare {
+                Spacer(minLength: 0)
+            } else {
             HStack(spacing: 10 * k) {
                 if timer.isDone {
-                    round("checkmark", tint: tint, filled: true, help: "Done") { model.removeTimer(timer.id) }
-                    round("arrow.counterclockwise", tint: tint, filled: false, help: "Restart") { model.toggleTimer(timer.id) }
+                    round(k, "checkmark", tint: tint, filled: true, help: "Done") { model.removeTimer(timer.id) }
+                    round(k, "arrow.counterclockwise", tint: tint, filled: false, help: "Restart") { model.toggleTimer(timer.id) }
                 } else {
-                    round(timer.isRunning ? "pause.fill" : "play.fill", tint: tint, filled: true, help: timer.isRunning ? "Pause" : "Start") { model.toggleTimer(timer.id) }
-                    round("arrow.counterclockwise", tint: tint, filled: false, help: "Reset") { model.resetTimer(timer.id) }
+                    round(k, timer.isRunning ? "pause.fill" : "play.fill", tint: tint, filled: true, help: timer.isRunning ? "Pause" : "Start") { model.toggleTimer(timer.id) }
+                    round(k, "arrow.counterclockwise", tint: tint, filled: false, help: "Reset") { model.resetTimer(timer.id) }
                 }
+            }
             }
         }
         .padding(16 * k)
         .frame(width: Self.size.width * k, height: Self.size.height * k)
-        .background(RoundedRectangle(cornerRadius: 16 * k).fill(ringing ? tint.opacity(0.12) : Theme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 16 * k).strokeBorder(ringing ? tint : (timer.isRunning ? tint.opacity(0.45) : Theme.line), lineWidth: ringing ? max(2, 2 * k) : max(1, k)))
+        .background(RoundedRectangle(cornerRadius: 16 * k).fill(fill))
+        .overlay(RoundedRectangle(cornerRadius: 16 * k).strokeBorder(border, lineWidth: borderWidth))
+        .shadow(color: glowColor, radius: (4 + 14 * glow) * k)
         .animation(Theme.colorShift, value: timer.isRunning)
         .animation(Theme.colorShift, value: ringing)
     }
 
-    private func round(_ symbol: String, tint: Color, filled: Bool, help: String, action: @escaping () -> Void) -> some View {
-        let k = scale
+    private func round(_ k: CGFloat, _ symbol: String, tint: Color, filled: Bool, help: String, action: @escaping () -> Void) -> some View {
         return Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 12 * k, weight: .semibold))

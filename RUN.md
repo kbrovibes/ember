@@ -24,6 +24,8 @@ One window, one idea: timers. A Pomodoro is just a `focus 20min` timer.
 | Tap a chip under the line | Start that named timer again. Seeded with Focus 20m, Water 1h, Break 5m; named timers you add are remembered and the most-used show first. Right-click a chip to remove it |
 | Edit a card's name; pause/resume, reset, × | Manage each timer. Cards shrink to fit, never scroll |
 | ✓ or ↻ on a finished card | ✓ stops the alarm and closes the timer; ↻ restarts it. Finished timers ring every ~2s until you press one |
+| Expand button (top right), or idle for 10 minutes | Distraction-free mode: only the timers, filling the window. Faint exit button top right, or Esc. A finished timer keeps its ✓ / ↻ buttons. Turn the auto-switch off in Settings |
+| Name / Remaining / Total / Added tabs (top left, with 2+ timers) | Sort timers; click the active one again to reverse |
 | Chart button | Stats: finished timers today, streak, last 7 days |
 | ⌘, or gear button | Settings: timer theme (Halo, Mono, Tide, Cinder, Tape — switches live, no restart), mode (light default) + accent colour, alarm sound + volume, notifications, menu-bar countdown, launch at login, data folder |
 
