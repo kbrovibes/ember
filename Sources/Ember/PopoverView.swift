@@ -27,7 +27,7 @@ struct PopoverView: View {
             CycleStrip()
 
             QuickStartRow(limit: 2) {
-                openWindow(id: "timers")
+                openWindow(id: "main")
                 NSApp.activate(ignoringOtherApps: true)
             }
 

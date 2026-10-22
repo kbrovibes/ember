@@ -238,3 +238,28 @@ import Foundation
         #expect(c.phase == .shortBreak)
     }
 }
+
+@Suite struct NamedParserTests {
+    @Test(arguments: [
+        ("water 2m", "Water", 120.0),
+        ("focus 20min", "Focus", 1200.0),
+        ("20 min focus", "Focus", 1200.0),
+        ("Tea 1h30m", "Tea", 5400.0),
+        ("laundry for 1 hour 30 minutes", "Laundry", 5400.0),
+        ("eggs 90s", "Eggs", 90.0),
+        ("focus 20", "Focus", 1200.0),
+        ("round 2 focus 20m", "Round 2 focus", 1200.0),
+        ("5m #tea", "Tea", 300.0),
+        ("10m", "", 600.0),
+        ("stretch 1:30", "Stretch", 90.0),
+    ])
+    func extractsNameAndDuration(input: String, name: String, seconds: Double) {
+        #expect(InputParser.parseNamed(input) == NamedTimer(name: name, duration: seconds))
+    }
+
+    @Test func rejectsTextWithoutDuration() {
+        #expect(InputParser.parseNamed("water") == nil)
+        #expect(InputParser.parseNamed("0m") == nil)
+        #expect(InputParser.parseNamed("") == nil)
+    }
+}

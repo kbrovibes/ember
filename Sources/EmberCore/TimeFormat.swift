@@ -14,7 +14,7 @@ public enum TimeFormat {
         let h = total / 3600, m = (total % 3600) / 60, s = total % 60
         switch (h, m) {
         case (0, 0): return "\(s) s"
-        case (0, _): return "\(m) min"
+        case (0, _): return s == 0 ? "\(m) min" : "\(m) min \(s) s"
         case (_, 0): return "\(h) h"
         default: return "\(h) h \(m) min"
         }

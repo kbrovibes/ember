@@ -28,7 +28,6 @@ enum Alerts {
     }
 
     static func timerDone(_ label: String, prefs: Prefs) {
-        if prefs.soundEnabled { play(prefs.timerSound, volume: prefs.soundVolume) }
         guard prefs.notificationsEnabled, canNotify else { return }
         let content = UNMutableNotificationContent()
         content.title = "Timer done"

@@ -42,17 +42,13 @@ enum SnapshotTool {
         shot("stats", size: CGSize(width: 640, height: 470)) { StatsView() }
         shot("focus-idle", size: CGSize(width: 1280, height: 800)) { FocusView() }
 
-        for spec in ["5m #tea", "25m #write", "90s #eggs", "10m #laundry"] { model.addTimer(text: spec) }
-        shot("timers-page", size: CGSize(width: 760, height: 200)) {
-            VStack(alignment: .leading, spacing: 18) { QuickStartRow(limit: 5) }.padding(28).background(Theme.bg)
-        }
+        for spec in ["tea 5m", "write 25min", "eggs 90s"] { model.addTimer(text: spec) }
+        model.mainTab = .timers
+        shot("timers-tab", size: window) { MainView() }
+        for spec in ["lunch 12m", "stretch 3m", "email 15m", "call 45m", "read 30m", "walk 20m", "tidy 10m", "water 1h"] { model.addTimer(text: spec) }
+        shot("timers-tab-many", size: window) { MainView() }
+        model.mainTab = .pomodoro
         shot("settings", size: CGSize(width: 460, height: 620)) { SettingsView() }
-        shot("timers", size: CGSize(width: 720, height: 480)) {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 280), spacing: 14)], spacing: 14) {
-                ForEach(model.timers) { TimerCard(timer: $0) }
-            }
-            .padding(28).background(Theme.bg)
-        }
 
         model.toggle()
         shot("popover-running", size: popover) { PopoverView() }

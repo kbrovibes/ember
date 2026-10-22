@@ -3,9 +3,16 @@ import Foundation
 import Observation
 import EmberCore
 
+enum MainTab: Hashable { case pomodoro, timers }
+
 @Observable
 @MainActor
 final class AppModel {
+    var mainTab: MainTab = .pomodoro
+    /// Timers that have finished and are still alarming; they ring on repeat until dismissed.
+    private(set) var ringing: Set<QuickTimer.ID> = []
+    @ObservationIgnored private var alarm: Timer?
+
     let engine: PomodoroEngine
     let prefs: Prefs
     private(set) var records: [SessionRecord]
@@ -101,13 +108,15 @@ final class AppModel {
 
     // MARK: quick timers
 
-    /// `text` accepts the same shorthand as the main field (`5m`, `1h30m`, `90s #tea`). Returns false if unparseable.
+    /// Free-form entry such as `water 2m` or `focus 20min`. Returns false if no duration can be found.
     @discardableResult
-    func addTimer(text: String, name: String = "") -> Bool {
-        guard let parsed = InputParser.parse(text) else { return false }
-        addTimer(name: name.isEmpty ? (parsed.tag ?? "") : name, duration: parsed.duration)
+    func addTimer(text: String) -> Bool {
+        guard let parsed = InputParser.parseNamed(text) else { return false }
+        addTimer(name: parsed.name, duration: parsed.duration)
         return true
     }
+
+    func showTimers() { mainTab = .timers }
 
     /// Named timers are remembered, so the ones used most show up as quick-start chips next launch.
     func addTimer(name: String, duration: TimeInterval) {
@@ -123,9 +132,27 @@ final class AppModel {
     func removeTemplate(_ template: TimerTemplate) { templates.remove(id: template.id); commit() }
     func renameTimer(_ id: QuickTimer.ID, to label: String) { mutateTimer(id) { $0.label = label } }
 
-    func toggleTimer(_ id: QuickTimer.ID) { mutateTimer(id) { $0.toggle(at: Date()) } }
-    func resetTimer(_ id: QuickTimer.ID) { mutateTimer(id) { $0.reset() } }
-    func removeTimer(_ id: QuickTimer.ID) { timers.removeAll { $0.id == id }; commit() }
+    func toggleTimer(_ id: QuickTimer.ID) { dismissAlarm(id); mutateTimer(id) { $0.toggle(at: Date()) } }
+    func resetTimer(_ id: QuickTimer.ID) { dismissAlarm(id); mutateTimer(id) { $0.reset() } }
+    func removeTimer(_ id: QuickTimer.ID) { dismissAlarm(id); timers.removeAll { $0.id == id }; commit() }
+    func dismissAlarm(_ id: QuickTimer.ID) {
+        guard ringing.remove(id) != nil else { return }
+        if ringing.isEmpty { alarm?.invalidate(); alarm = nil }
+    }
+
+    private func startAlarm(for id: QuickTimer.ID) {
+        ringing.insert(id)
+        guard alarm == nil else { return }
+        let timer = Timer(timeInterval: 2.2, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, self.prefs.soundEnabled else { return }
+                Alerts.play(self.prefs.timerSound, volume: self.prefs.soundVolume)
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        alarm = timer
+        if prefs.soundEnabled { Alerts.play(prefs.timerSound, volume: prefs.soundVolume) }
+    }
 
     private func mutateTimer(_ id: QuickTimer.ID, _ change: (inout QuickTimer) -> Void) {
         guard let i = timers.firstIndex(where: { $0.id == id }) else { return }
@@ -137,6 +164,10 @@ final class AppModel {
         let date = Date()
         for i in timers.indices where timers[i].tick(at: date) {
             Alerts.timerDone(timers[i].label, prefs: prefs)
+            startAlarm(for: timers[i].id)
+            mainTab = .timers
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.requestUserAttention(.criticalRequest)
         }
         persist()
     }
