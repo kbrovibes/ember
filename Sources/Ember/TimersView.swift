@@ -24,7 +24,7 @@ struct TimersPane: View {
     }
 }
 
-/// Picks the column count that lets every card show at the largest scale, so the area never needs to scroll.
+/// Picks the column count that lets every card show at the largest scale, so the area never needs to scroll. Grows as well as shrinks with the window.
 private struct TimerGrid: View {
     let timers: [QuickTimer]
     private let gap: CGFloat = 14
@@ -33,7 +33,7 @@ private struct TimerGrid: View {
         GeometryReader { geo in
             let fit = best(count: timers.count, in: geo.size)
             let cell = CGSize(width: TimerCard.size.width * fit.scale, height: TimerCard.size.height * fit.scale)
-            VStack(alignment: .leading, spacing: gap) {
+            VStack(alignment: .center, spacing: gap) {
                 ForEach(Array(stride(from: 0, to: timers.count, by: fit.columns)), id: \.self) { start in
                     HStack(spacing: gap) {
                         ForEach(timers[start..<min(start + fit.columns, timers.count)]) { timer in
@@ -45,7 +45,7 @@ private struct TimerGrid: View {
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             .animation(Theme.spring, value: timers.map(\.id))
         }
     }
@@ -56,7 +56,7 @@ private struct TimerGrid: View {
             let rows = (count + columns - 1) / columns
             let w = (size.width - gap * CGFloat(columns - 1)) / CGFloat(columns) / TimerCard.size.width
             let h = (size.height - gap * CGFloat(rows - 1)) / CGFloat(rows) / TimerCard.size.height
-            let scale = min(w, h, 1)
+            let scale = min(w, h, 3.5)
             if scale > best.scale { best = (columns, scale) }
         }
         return (best.columns, max(best.scale, 0.2))
@@ -64,20 +64,18 @@ private struct TimerGrid: View {
 }
 
 struct TimerCard: View {
-    static let size = CGSize(width: 220, height: 176)
+    static let size = CGSize(width: 224, height: 214)
     @Environment(AppModel.self) private var model
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let timer: QuickTimer
 
     var body: some View {
         let remaining = timer.remaining(at: model.now)
-        let clock = TimeFormat.clock(remaining)
-        let tint = timer.isDone ? Theme.done : Theme.accent
         let ringing = model.ringing.contains(timer.id)
+        let tint = timer.isDone ? Theme.done : Theme.accent
 
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Image(systemName: ringing ? "bell.fill" : (timer.isDone ? "checkmark.circle.fill" : "timer"))
+        VStack(spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: ringing ? "bell.fill" : "timer")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(tint)
                     .symbolEffect(.bounce, options: .repeating, isActive: ringing)
@@ -86,52 +84,26 @@ struct TimerCard: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Theme.ink2)
                     .lineLimit(1)
-                if timer.isDone {
-                    Text("Done").font(.system(size: 11, weight: .medium)).foregroundStyle(tint)
+                if !timer.isDone {
+                    Button { model.removeTimer(timer.id) } label: {
+                        Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.ink3)
+                            .frame(width: 20, height: 20)
+                    }
+                    .buttonStyle(PressStyle())
+                    .help("Remove")
                 }
-                Spacer()
-                Button { model.removeTimer(timer.id) } label: {
-                    Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.ink3)
-                        .frame(width: 20, height: 20)
-                }
-                .buttonStyle(PressStyle())
-                .help("Remove")
             }
 
-            Text(clock)
-                .font(.system(size: 40, weight: .light))
-                .monospacedDigit()
-                .foregroundStyle(Theme.ink)
-                .contentTransition(reduceMotion ? .identity : .numericText(countsDown: true))
-                .animation(reduceMotion ? nil : Theme.spring, value: clock)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-                .accessibilityLabel("\(timer.label), \(TimeFormat.spoken(remaining)) remaining")
-
-            ProgressTrack(progress: timer.progress(at: model.now), tint: tint)
+            TimerFace(theme: model.prefs.timerTheme, remaining: remaining, duration: timer.duration, tint: tint, running: timer.isRunning)
 
             HStack(spacing: 10) {
-                Button { ringing ? model.dismissAlarm(timer.id) : model.toggleTimer(timer.id) } label: {
-                    Image(systemName: ringing ? "checkmark" : (timer.isRunning ? "pause.fill" : "play.fill"))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Theme.onAccent)
-                        .frame(width: 34, height: 34)
-                        .background(Circle().fill(tint))
+                if timer.isDone {
+                    round("checkmark", tint: tint, filled: true, help: "Done") { model.removeTimer(timer.id) }
+                    round("arrow.counterclockwise", tint: tint, filled: false, help: "Restart") { model.toggleTimer(timer.id) }
+                } else {
+                    round(timer.isRunning ? "pause.fill" : "play.fill", tint: tint, filled: true, help: timer.isRunning ? "Pause" : "Start") { model.toggleTimer(timer.id) }
+                    round("arrow.counterclockwise", tint: tint, filled: false, help: "Reset") { model.resetTimer(timer.id) }
                 }
-                .buttonStyle(PressStyle())
-                .help(ringing ? "Dismiss alarm" : (timer.isRunning ? "Pause" : "Start"))
-                Button { model.resetTimer(timer.id) } label: {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Theme.ink2)
-                        .frame(width: 34, height: 34)
-                        .background(Circle().fill(Theme.surface))
-                        .overlay(Circle().strokeBorder(Theme.line))
-                }
-                .buttonStyle(PressStyle())
-                .help("Reset")
-                if ringing { Text("Dismiss").font(.system(size: 12, weight: .semibold)).foregroundStyle(tint) }
-                Spacer()
             }
         }
         .padding(16)
@@ -141,20 +113,17 @@ struct TimerCard: View {
         .animation(Theme.colorShift, value: timer.isRunning)
         .animation(Theme.colorShift, value: ringing)
     }
-}
 
-private struct ProgressTrack: View {
-    let progress: Double
-    let tint: Color
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.surface2)
-                Capsule().fill(tint).frame(width: max(4, geo.size.width * progress))
-            }
+    private func round(_ symbol: String, tint: Color, filled: Bool, help: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(filled ? Theme.onAccent : Theme.ink2)
+                .frame(width: 34, height: 34)
+                .background(Circle().fill(filled ? tint : Theme.surface))
+                .overlay(Circle().strokeBorder(filled ? .clear : Theme.line))
         }
-        .frame(height: 4)
-        .accessibilityHidden(true)
+        .buttonStyle(PressStyle())
+        .help(help)
     }
 }

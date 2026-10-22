@@ -10,6 +10,10 @@ struct SettingsView: View {
     var body: some View {
         @Bindable var prefs = model.prefs
         Form {
+            Section("Theme") {
+                ThemePicker()
+            }
+
             Section("Appearance") {
                 Picker("Mode", selection: $prefs.appearance) {
                     Text("Light").tag("light")
@@ -61,7 +65,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 520)
+        .frame(width: 480, height: 640)
     }
 
     private func swatch(_ theme: AccentTheme, selected: Bool, action: @escaping () -> Void) -> some View {
@@ -94,5 +98,36 @@ struct SettingsView: View {
             loginError = "Couldn't change login item: \(error.localizedDescription)"
         }
         loginEnabled = SMAppService.mainApp.status == .enabled
+    }
+}
+
+/// Five live previews; picking one restyles every timer immediately.
+struct ThemePicker: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(TimerTheme.allCases) { theme in
+                let selected = model.prefs.timerTheme == theme
+                Button { withAnimation(Theme.spring) { model.prefs.timerTheme = theme } } label: {
+                    VStack(spacing: 6) {
+                        TimerFace(theme: theme, remaining: 13 * 60, duration: 20 * 60, tint: Theme.accent)
+                            .scaleEffect(0.36)
+                            .frame(width: 70, height: 40)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.surface))
+                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(selected ? Theme.accent : Theme.line, lineWidth: selected ? 2 : 1))
+                        Text(theme.name)
+                            .font(.system(size: 11, weight: selected ? .semibold : .regular))
+                            .foregroundStyle(selected ? Theme.ink : Theme.ink3)
+                    }
+                }
+                .buttonStyle(PressStyle())
+                .accessibilityLabel("\(theme.name) theme")
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(.vertical, 4)
     }
 }

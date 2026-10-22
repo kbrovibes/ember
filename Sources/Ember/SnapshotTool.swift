@@ -32,19 +32,22 @@ enum SnapshotTool {
         let window = CGSize(width: 840, height: 540)
         let popover = CGSize(width: 320, height: 430)
 
-        shot("main-empty", size: window) { MainView() }
-        shot("popover-empty", size: popover) { PopoverView() }
-
         for spec in ["focus 20min", "water 1h", "tea 5m", "eggs 90s"] { model.addTimer(text: spec) }
-        shot("main-timers", size: window) { MainView() }
-        shot("main-timers-dark", size: window, dark: true) { MainView() }
+        for theme in TimerTheme.allCases {
+            model.prefs.timerTheme = theme
+            shot("theme-\(theme.rawValue)", size: window) { MainView() }
+        }
+        model.prefs.timerTheme = .tape
+        shot("main-large", size: CGSize(width: 1600, height: 1000)) { MainView() }
         shot("popover-timers", size: popover) { PopoverView() }
+        shot("themepicker", size: CGSize(width: 440, height: 120)) { ThemePicker().padding(20).background(Theme.bg) }
 
-        for spec in ["lunch 12m", "stretch 3m", "email 15m", "call 45m", "read 30m", "walk 20m", "tidy 10m"] { model.addTimer(text: spec) }
-        shot("main-many", size: window) { MainView() }
-
-        shot("stats", size: CGSize(width: 640, height: 470)) { StatsView() }
-        shot("settings", size: CGSize(width: 460, height: 520)) { SettingsView() }
+        var finished = QuickTimer(label: "Tea", duration: 60)
+        finished.toggle(at: Date(timeIntervalSinceNow: -120))
+        finished.tick(at: Date())
+        shot("card-done", size: CGSize(width: 260, height: 250)) { TimerCard(timer: finished).padding(18).background(Theme.bg) }
+        shot("main-timers-dark", size: window, dark: true) { MainView() }
+        shot("settings", size: CGSize(width: 480, height: 640)) { SettingsView() }
         exit(0)
     }
 }

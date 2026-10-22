@@ -57,7 +57,6 @@ private struct TimerRow: View {
     let timer: QuickTimer
 
     var body: some View {
-        let ringing = model.ringing.contains(timer.id)
         let tint = timer.isDone ? Theme.done : Theme.accent
         VStack(spacing: 6) {
             HStack(spacing: 10) {
@@ -65,18 +64,16 @@ private struct TimerRow: View {
                 Spacer()
                 Text(TimeFormat.clock(timer.remaining(at: model.now)))
                     .font(.system(size: 13)).monospacedDigit().foregroundStyle(Theme.ink2)
-                Button { ringing ? model.dismissAlarm(timer.id) : model.toggleTimer(timer.id) } label: {
-                    Image(systemName: ringing ? "checkmark" : (timer.isRunning ? "pause.fill" : "play.fill"))
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Theme.onAccent)
-                        .frame(width: 24, height: 24)
-                        .background(Circle().fill(tint))
+                if timer.isDone {
+                    rowButton("arrow.counterclockwise", tint: tint, filled: false) { model.toggleTimer(timer.id) }
+                    rowButton("checkmark", tint: tint, filled: true) { model.removeTimer(timer.id) }
+                } else {
+                    rowButton(timer.isRunning ? "pause.fill" : "play.fill", tint: tint, filled: true) { model.toggleTimer(timer.id) }
+                    Button { model.removeTimer(timer.id) } label: {
+                        Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.ink3).frame(width: 18, height: 24)
+                    }
+                    .buttonStyle(PressStyle())
                 }
-                .buttonStyle(PressStyle())
-                Button { model.removeTimer(timer.id) } label: {
-                    Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.ink3).frame(width: 18, height: 24)
-                }
-                .buttonStyle(PressStyle())
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -86,6 +83,20 @@ private struct TimerRow: View {
             }
             .frame(height: 3)
         }
+    }
+}
+
+extension TimerRow {
+    fileprivate func rowButton(_ symbol: String, tint: Color, filled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(filled ? Theme.onAccent : Theme.ink2)
+                .frame(width: 24, height: 24)
+                .background(Circle().fill(filled ? tint : Theme.surface))
+                .overlay(Circle().strokeBorder(filled ? .clear : Theme.line))
+        }
+        .buttonStyle(PressStyle())
     }
 }
 

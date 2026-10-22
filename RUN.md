@@ -23,9 +23,9 @@ One window, one idea: timers. A Pomodoro is just a `focus 20min` timer.
 | Type in the big line, e.g. `water 2m`, `focus 20min`, `20 min focus`, `tea 1h30m`, `eggs 90s` + Return | Start a timer. Name and time are pulled out of the sentence |
 | Tap a chip under the line | Start that named timer again. Seeded with Focus 20m, Water 1h, Break 5m; named timers you add are remembered and the most-used show first. Right-click a chip to remove it |
 | Edit a card's name; pause/resume, reset, × | Manage each timer. Cards shrink to fit, never scroll |
-| Checkmark on a ringing card | Stop the repeating alarm (finished timers ring every ~2s until dismissed) |
+| ✓ or ↻ on a finished card | ✓ stops the alarm and closes the timer; ↻ restarts it. Finished timers ring every ~2s until you press one |
 | Chart button | Stats: finished timers today, streak, last 7 days |
-| ⌘, or gear button | Settings: mode (light default) + accent colour, alarm sound + volume, notifications, menu-bar countdown, launch at login, data folder |
+| ⌘, or gear button | Settings: timer theme (Halo, Mono, Tide, Cinder, Tape — switches live, no restart), mode (light default) + accent colour, alarm sound + volume, notifications, menu-bar countdown, launch at login, data folder |
 
 Closing the window keeps Ember (and your timers) running in the menu bar; the Dock icon reopens it. Quit with Dock right-click → Quit, the popover's Quit, or ⌘Q.
 The menu bar shows the soonest-finishing timer; the Dock icon shows its progress.
