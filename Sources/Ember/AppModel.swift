@@ -33,9 +33,9 @@ final class AppModel {
         prefs.applyAppearance()
 
         let saved = stateStore.load()
-        templates = saved.templates
+        templates = TimerTemplates(items: saved.templates.items.map { var t = $0; t.name = t.name.lowercased(); return t })
         let launch = Date()
-        timers = saved.timers.map { var t = $0; t.tick(at: launch); return t }
+        timers = saved.timers.map { var t = $0; t.label = t.label.lowercased(); t.tick(at: launch); return t }
 
         let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated {
@@ -97,7 +97,7 @@ final class AppModel {
 
     /// Named timers are remembered, so the ones used most show up as quick-start chips next launch.
     func addTimer(name: String, duration: TimeInterval) {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let trimmed = name.trimmingCharacters(in: .whitespaces).lowercased()
         var timer = QuickTimer(label: trimmed.isEmpty ? TimeFormat.spoken(duration) : trimmed, duration: duration)
         timer.toggle(at: Date())
         timers.append(timer)
@@ -107,7 +107,7 @@ final class AppModel {
 
     func startTemplate(_ template: TimerTemplate) { addTimer(name: template.name, duration: template.duration) }
     func removeTemplate(_ template: TimerTemplate) { templates.remove(id: template.id); commit() }
-    func renameTimer(_ id: QuickTimer.ID, to label: String) { mutateTimer(id) { $0.label = label } }
+    func renameTimer(_ id: QuickTimer.ID, to label: String) { mutateTimer(id) { $0.label = label.lowercased() } }
 
     func toggleTimer(_ id: QuickTimer.ID) { dismissAlarm(id); mutateTimer(id) { $0.toggle(at: Date()) } }
     func resetTimer(_ id: QuickTimer.ID) { dismissAlarm(id); mutateTimer(id) { $0.reset() } }

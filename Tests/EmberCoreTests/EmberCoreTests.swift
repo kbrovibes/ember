@@ -123,11 +123,11 @@ import Foundation
 
     @Test func templatesRankByUseThenRecency() {
         var templates = TimerTemplates()
-        templates.record(name: "Water", duration: 3600, at: t0)
+        templates.record(name: "water", duration: 3600, at: t0)
         templates.record(name: "water", duration: 3600, at: t0.addingTimeInterval(10))
-        templates.record(name: "Stretch", duration: 120, at: t0.addingTimeInterval(20))
+        templates.record(name: "stretch", duration: 120, at: t0.addingTimeInterval(20))
         let names = templates.top(3).map(\.name)
-        #expect(names == ["Water", "Stretch", "Focus"])
+        #expect(names == ["water", "stretch", "focus"])
         #expect(templates.items.filter { $0.id.hasPrefix("water") }.count == 1)
     }
 
@@ -140,17 +140,17 @@ import Foundation
 
 @Suite struct NamedParserTests {
     @Test(arguments: [
-        ("water 2m", "Water", 120.0),
-        ("focus 20min", "Focus", 1200.0),
-        ("20 min focus", "Focus", 1200.0),
-        ("Tea 1h30m", "Tea", 5400.0),
-        ("laundry for 1 hour 30 minutes", "Laundry", 5400.0),
-        ("eggs 90s", "Eggs", 90.0),
-        ("focus 20", "Focus", 1200.0),
-        ("round 2 focus 20m", "Round 2 focus", 1200.0),
-        ("5m #tea", "Tea", 300.0),
+        ("water 2m", "water", 120.0),
+        ("focus 20min", "focus", 1200.0),
+        ("20 min focus", "focus", 1200.0),
+        ("Tea 1h30m", "tea", 5400.0),
+        ("laundry for 1 hour 30 minutes", "laundry", 5400.0),
+        ("eggs 90s", "eggs", 90.0),
+        ("focus 20", "focus", 1200.0),
+        ("round 2 focus 20m", "round 2 focus", 1200.0),
+        ("5m #tea", "tea", 300.0),
         ("10m", "", 600.0),
-        ("stretch 1:30", "Stretch", 90.0),
+        ("stretch 1:30", "stretch", 90.0),
     ])
     func extractsNameAndDuration(input: String, name: String, seconds: Double) {
         #expect(InputParser.parseNamed(input) == NamedTimer(name: name, duration: seconds))

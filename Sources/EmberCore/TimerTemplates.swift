@@ -14,9 +14,9 @@ public struct TimerTemplates: Codable, Equatable, Sendable {
     public private(set) var items: [TimerTemplate]
 
     public static let seeds: [TimerTemplate] = [
-        TimerTemplate(name: "Focus", duration: 20 * 60, uses: 0, lastUsed: Date(timeIntervalSince1970: 0)),
-        TimerTemplate(name: "Water", duration: 60 * 60, uses: 0, lastUsed: Date(timeIntervalSince1970: 0)),
-        TimerTemplate(name: "Break", duration: 5 * 60, uses: 0, lastUsed: Date(timeIntervalSince1970: 0)),
+        TimerTemplate(name: "focus", duration: 20 * 60, uses: 0, lastUsed: Date(timeIntervalSince1970: 0)),
+        TimerTemplate(name: "water", duration: 60 * 60, uses: 0, lastUsed: Date(timeIntervalSince1970: 0)),
+        TimerTemplate(name: "break", duration: 5 * 60, uses: 0, lastUsed: Date(timeIntervalSince1970: 0)),
     ]
 
     public init(items: [TimerTemplate] = TimerTemplates.seeds) { self.items = items }

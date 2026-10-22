@@ -67,7 +67,7 @@ extension InputParser {
     private static let fillers: Set<String> = ["for", "a", "an", "of", "in", "timer", "set", "start", "new", "minute", "minutes", "min", "mins"]
 
     /// Free-form entry like `water 2m`, `focus 20min`, `1 hour 30 minutes laundry` or `5m #tea`: the duration is
-    /// pulled out wherever it sits and what remains becomes the name. A lone bare number means minutes.
+    /// pulled out wherever it sits and what remains becomes the name, lowercased. A lone bare number means minutes.
     public static func parseNamed(_ input: String) -> NamedTimer? {
         let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
         let whole = NSRange(text.startIndex..., in: text)
@@ -86,9 +86,7 @@ extension InputParser {
         while let first = words.first, fillers.contains(first.lowercased()) { words.removeFirst() }
         while let last = words.last, fillers.contains(last.lowercased()) { words.removeLast() }
 
-        var name = words.joined(separator: " ")
-        if let first = name.first { name = first.uppercased() + name.dropFirst() }
-        return NamedTimer(name: name, duration: duration)
+        return NamedTimer(name: words.joined(separator: " ").lowercased(), duration: duration)
     }
 
     private static func duration(of spec: String) -> TimeInterval? {

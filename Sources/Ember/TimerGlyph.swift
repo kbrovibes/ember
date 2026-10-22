@@ -92,7 +92,7 @@ struct TimerGlyph: View {
     // MARK: Monogram
 
     private func monogram(_ color: Color) -> some View {
-        let letter = name.first(where: { $0.isLetter || $0.isNumber }).map { String($0).uppercased() } ?? "#"
+        let letter = name.first(where: { $0.isLetter || $0.isNumber }).map { String($0).lowercased() } ?? "#"
         return ZStack {
             RoundedRectangle(cornerRadius: size * 0.3, style: .continuous)
                 .fill(LinearGradient(colors: [color, color.opacity(0.72)], startPoint: .topLeading, endPoint: .bottomTrailing))
