@@ -28,8 +28,7 @@ struct TimersPane: View {
     }
 
     private var entry: some View {
-        let parsed = InputParser.parseNamed(text)
-        return VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             TextField("", text: $text, prompt: Text("water 2m").foregroundStyle(Theme.ink3.opacity(0.6)))
                 .textFieldStyle(.plain)
                 .focused($focused)
@@ -43,20 +42,7 @@ struct TimersPane: View {
                 .fill(invalid ? Theme.accent(.focus) : (focused ? Theme.accent(.focus) : Theme.line2))
                 .frame(height: focused || invalid ? 2 : 1)
                 .animation(Theme.spring, value: focused)
-
-            Text(hint(parsed))
-                .font(.system(size: 12))
-                .foregroundStyle(invalid ? Theme.accent(.focus) : Theme.ink3)
-                .contentTransition(.interpolate)
-                .animation(Theme.spring, value: hint(parsed))
         }
-    }
-
-    private func hint(_ parsed: NamedTimer?) -> String {
-        if invalid { return "Add a time, like 2m, 20min or 1h30m" }
-        guard let parsed else { return "Name and time, then Return · “focus 20min”, “eggs 90s”, “tea 1h30m”" }
-        let name = parsed.name.isEmpty ? "Timer" : parsed.name
-        return "\(name) · \(TimeFormat.spoken(parsed.duration)) — press Return to start"
     }
 
     private func add() {
